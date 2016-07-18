@@ -40,7 +40,13 @@ void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void
 	if(menu_cell_layer_is_highlighted(cell_layer)){
 		graphics_context_set_fill_color(ctx, GColorPastelYellow);
 		graphics_fill_rect(ctx, layer_get_bounds(cell_layer), 0, GCornerNone);
+		#ifndef PBL_COLOR
+		graphics_context_set_stroke_color(ctx, GColorBlack);
+		graphics_context_set_stroke_width(ctx, 2);
+		graphics_draw_line(ctx, GPoint(2,2), GPoint(2,54));
+		#endif
 	}
+	
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
 	graphics_draw_bitmap_in_rect(ctx, nearby[index->row], GRect(4+28-(gbitmap_get_bounds(nearby[index->row]).size.w/2),28-(gbitmap_get_bounds(nearby[index->row]).size.h/2), gbitmap_get_bounds(nearby[index->row]).size.w, gbitmap_get_bounds(nearby[index->row]).size.h));
 	
@@ -74,6 +80,7 @@ void init(){
 	GColor *pal_top = gbitmap_get_palette(top);
 	GColor *pal_bottom = gbitmap_get_palette(bottom);
 	
+	#ifdef PBL_COLOR
 	switch(TEAM){
 		case MYSTIC:
 			pal_top[0] = GColorCobaltBlue;
@@ -85,6 +92,7 @@ void init(){
 			pal_bottom[2] = GColorOrange;
 		break;
 	}
+	#endif
 	
 	list = window_create();
 	window_set_background_color(list, GColorWhite);
