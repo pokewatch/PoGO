@@ -32,6 +32,7 @@ void temp_draw(Layer *layer, GContext *ctx){
 		if(i%2 == 0) graphics_draw_pixel(ctx, GPoint(i, 15));
 	}
 	
+	graphics_context_set_compositing_mode(ctx, GCompOpSet);
 	graphics_draw_bitmap_in_rect(ctx, top, GRect(0,16,144,11));
 	graphics_draw_bitmap_in_rect(ctx, bottom, GRect(0,168-11,144,11));
 }
@@ -106,7 +107,7 @@ void init(){
 		.select_click = pokemon_click
 	});
 	menu_layer_set_click_config_onto_window(menu, list);
-	menu_layer_pad_bottom_enable(menu, false);
+	//menu_layer_pad_bottom_enable(menu, false);
 	
 	layer_add_child(window_get_root_layer(list), menu_layer_get_layer(menu));
 	

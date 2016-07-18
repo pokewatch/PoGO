@@ -41,6 +41,11 @@
                     "type": "bitmap"
                 },
                 {
+                    "file": "images/poke9.png",
+                    "name": "IMAGE_poke9",
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/poke99.png",
                     "name": "IMAGE_poke99",
                     "type": "bitmap"
@@ -88,11 +93,6 @@
                 {
                     "file": "images/poke90.png",
                     "name": "IMAGE_poke90",
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/poke9.png",
-                    "name": "IMAGE_poke9",
                     "type": "bitmap"
                 },
                 {
@@ -576,6 +576,11 @@
                     "type": "bitmap"
                 },
                 {
+                    "file": "images/poke13.png",
+                    "name": "IMAGE_poke13",
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/poke139.png",
                     "name": "IMAGE_poke139",
                     "type": "bitmap"
@@ -623,11 +628,6 @@
                 {
                     "file": "images/poke130.png",
                     "name": "IMAGE_poke130",
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/poke13.png",
-                    "name": "IMAGE_poke13",
                     "type": "bitmap"
                 },
                 {
@@ -686,11 +686,6 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/poke11.png",
-                    "name": "IMAGE_poke11",
-                    "type": "bitmap"
-                },
-                {
                     "file": "images/poke119.png",
                     "name": "IMAGE_poke119",
                     "type": "bitmap"
@@ -738,6 +733,11 @@
                 {
                     "file": "images/poke110.png",
                     "name": "IMAGE_poke110",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/poke11.png",
+                    "name": "IMAGE_poke11",
                     "type": "bitmap"
                 },
                 {
