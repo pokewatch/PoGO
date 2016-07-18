@@ -98,7 +98,7 @@ void init(){
 	window_set_background_color(list, GColorWhite);
 	layer_set_update_proc(window_get_root_layer(list), temp_draw);
 	
-	menu = menu_layer_create(GRect(0,27,144,168-27-11));
+	menu = menu_layer_create(GRect(0, 15, 144, 168 - 15));
 	menu_layer_set_callbacks(menu, NULL, (MenuLayerCallbacks){
 		.draw_row = draw_pokemon,
 		.get_num_rows = get_num_pokemon,
