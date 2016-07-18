@@ -2,19 +2,20 @@
     "author": "Mathew Reiss",
     "dependencies": {},
     "keywords": [],
-    "name": "pokedex-challenge",
+    "name": "pok-mon-go-radar",
     "pebble": {
         "capabilities": [
             "location",
             "configurable"
         ],
-        "displayName": "Pokedex Challenge",
+        "displayName": "Pok\u00e9mon GO Radar",
         "enableMultiJS": true,
         "messageKeys": [
             "NumPokemon",
             "PokedexData[9]",
             "DistanceData[9]",
-            "AngleData[9]"
+            "AngleData[9]",
+            "Team"
         ],
         "projectType": "native",
         "resources": {
@@ -819,10 +820,10 @@
             "aplite",
             "basalt"
         ],
-        "uuid": "4743935a-2d52-407c-853a-f3b0ffb140df",
+        "uuid": "6532f36c-e853-432c-8784-2e9f5c042cfc",
         "watchapp": {
             "watchface": false
         }
     },
-    "version": "3.2.0"
+    "version": "0.1.0"
 }
