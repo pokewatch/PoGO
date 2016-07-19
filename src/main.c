@@ -78,7 +78,7 @@ void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void
 	graphics_draw_bitmap_in_rect(ctx, nearby[index->row-1].sprite, GRect(2+30-(gbitmap_get_bounds(nearby[index->row-1].sprite).size.w/2),30-(gbitmap_get_bounds(nearby[index->row-1].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row-1].sprite).size.w, gbitmap_get_bounds(nearby[index->row-1].sprite).size.h));
 	
 	graphics_context_set_text_color(ctx, GColorBlack);
-	graphics_draw_text(ctx, nearby[index->row-1].listBuffer, custom_font, GRect(64, 14, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+	graphics_draw_text(ctx, nearby[index->row-1].listBuffer, custom_font, GRect(64, 14, 180, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 	
 	graphics_context_set_fill_color(ctx, GColorBlack);
 	gpath_draw_filled(ctx, mini_compass);
@@ -93,10 +93,25 @@ static int16_t pokemon_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index,
 	return 60;
 }
 
-static void pokemon_click(MenuLayer *menu_layer, MenuIndex *cell_index, void *data){
-	//set_pokemon(pokedex[cell_index->row]);
-	//window_stack_push(compass);
-	//start_high_frequency_timer();
+void down(ClickRecognizerRef ref, void *context){
+	MenuIndex current = menu_layer_get_selected_index(menu);
+	if(current.row == NUM_POKEMON) return;
+	else {
+		menu_layer_set_selected_next(menu, false, MenuRowAlignCenter, true);
+	}
+}
+
+void up(ClickRecognizerRef ref, void *context){
+	MenuIndex current = menu_layer_get_selected_index(menu);
+	if(current.row == 1) return;
+	else{
+		menu_layer_set_selected_next(menu, true, MenuRowAlignCenter, true);
+	}
+}
+
+void config(void *context){
+	window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 200, down);
+	window_single_repeating_click_subscribe(BUTTON_ID_UP, 200, up);
 }
 
 void init(){
@@ -126,6 +141,7 @@ void init(){
 	#endif
 	
 	list = window_create();
+	window_set_click_config_provider(list, config);
 	window_set_background_color(list, GColorWhite);
 	
 	menu = menu_layer_create(GRect(0, 16, PBL_IF_RECT_ELSE(144,180), PBL_IF_RECT_ELSE(168,180) - 16));
@@ -133,9 +149,8 @@ void init(){
 		.draw_row = draw_pokemon,
 		.get_num_rows = get_num_pokemon,
 		.get_cell_height = pokemon_cell_height,
-		.select_click = pokemon_click
 	});
-	menu_layer_set_click_config_onto_window(menu, list);
+	//menu_layer_set_click_config_onto_window(menu, list);
 	
 	layer_add_child(window_get_root_layer(list), menu_layer_get_layer(menu));
 	
@@ -149,7 +164,7 @@ void init(){
 	layer_add_child(window_get_root_layer(list), overlay);
 	
 	//DUMMY DATA
-	NUM_POKEMON = 3;
+	NUM_POKEMON = 5;
 
 	nearby[0].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke25);
 	strncpy(nearby[0].listBuffer, "Pikachu\n\n12 m", sizeof(nearby[0].listBuffer));
@@ -160,6 +175,12 @@ void init(){
 	nearby[2].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke128);
 	strncpy(nearby[2].listBuffer, "Tauros\n\n121 m", sizeof(nearby[2].listBuffer));
 				
+	nearby[3].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke35);
+	strncpy(nearby[3].listBuffer, "Clefairy\n\n135 m", sizeof(nearby[3].listBuffer));
+	
+	nearby[4].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke138);
+	strncpy(nearby[4].listBuffer, "Omanyte\n\n163 m", sizeof(nearby[4].listBuffer));
+	
 	menu_layer_reload_data(menu);
 	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
 	
