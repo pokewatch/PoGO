@@ -53,25 +53,25 @@ void temp_draw(Layer *layer, GContext *ctx){
 	graphics_draw_bitmap_in_rect(ctx, bottom, GRect(PBL_IF_RECT_ELSE(0,18),PBL_IF_RECT_ELSE(168,180)-11,144,11));
 	
 	graphics_context_set_text_color(ctx, GColorWhite);
-	graphics_draw_text(ctx, "12:34", fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(0,PBL_IF_RECT_ELSE(-2,4),PBL_IF_RECT_ELSE(144,180),16), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+	graphics_draw_text(ctx, "12:34", fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(0,PBL_IF_RECT_ELSE(-2,2),PBL_IF_RECT_ELSE(144,180),16), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
 
 void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void *data){
 	if(menu_cell_layer_is_highlighted(cell_layer)){
-		graphics_context_set_fill_color(ctx, GColorPastelYellow);
+		graphics_context_set_fill_color(ctx, GColorLightGray);
 		graphics_fill_rect(ctx, layer_get_bounds(cell_layer), 0, GCornerNone);
 		#ifndef PBL_COLOR
 		graphics_context_set_stroke_color(ctx, GColorBlack);
 		graphics_context_set_stroke_width(ctx, 2);
-		graphics_draw_line(ctx, GPoint(2,2), GPoint(2,54));
+		graphics_draw_line(ctx, GPoint(2,4), GPoint(2,56));
 		#endif
 	}
 	
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	graphics_draw_bitmap_in_rect(ctx, nearby[index->row].sprite, GRect(4+28-(gbitmap_get_bounds(nearby[index->row].sprite).size.w/2),28-(gbitmap_get_bounds(nearby[index->row].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row].sprite).size.w, gbitmap_get_bounds(nearby[index->row].sprite).size.h));
+	graphics_draw_bitmap_in_rect(ctx, nearby[index->row].sprite, GRect(4+30-(gbitmap_get_bounds(nearby[index->row].sprite).size.w/2),30-(gbitmap_get_bounds(nearby[index->row].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row].sprite).size.w, gbitmap_get_bounds(nearby[index->row].sprite).size.h));
 	
 	graphics_context_set_text_color(ctx, GColorBlack);
-	graphics_draw_text(ctx, nearby[index->row].listBuffer, custom_font, GRect(64, 12, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+	graphics_draw_text(ctx, nearby[index->row].listBuffer, custom_font, GRect(64, 14, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 	
 	graphics_context_set_fill_color(ctx, GColorBlack);
 	gpath_draw_filled(ctx, mini_compass);
@@ -82,7 +82,7 @@ static uint16_t get_num_pokemon(MenuLayer *menu_layer, uint16_t section_index, v
 }
 
 static int16_t pokemon_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index, void *data){
-	return 56;
+	return 60;
 }
 
 static void pokemon_click(MenuLayer *menu_layer, MenuIndex *cell_index, void *data){
@@ -132,7 +132,7 @@ void init(){
 	layer_add_child(window_get_root_layer(list), menu_layer_get_layer(menu));
 	
 	mini_compass = gpath_create(&MINI_COMPASS_INFO);
-	gpath_move_to(mini_compass, GPoint(124, 38));
+	gpath_move_to(mini_compass, GPoint(124, 40));
 	gpath_rotate_to(mini_compass, TRIG_MAX_ANGLE/12);
 	
 	overlay = layer_create(layer_get_bounds(window_get_root_layer(list)));
