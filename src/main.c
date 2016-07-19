@@ -24,12 +24,12 @@ typedef struct {
 	int angle;
 	int dex;
 	GBitmap *sprite;
-	char *name;
-	char *distance;
-	char *listBuffer;
+	char name[64];
+	char distance[8];
+	char listBuffer[128];
 } Pokemon;
 
-struct Pokemon nearby[9];
+Pokemon nearby[9];
 
 static GPath *mini_compass = NULL;
 static const GPathInfo MINI_COMPASS_INFO = {
@@ -69,7 +69,7 @@ void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void
 	graphics_draw_bitmap_in_rect(ctx, nearby[index->row].sprite, GRect(4+28-(gbitmap_get_bounds(nearby[index->row].sprite).size.w/2),28-(gbitmap_get_bounds(nearby[index->row].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row].sprite).size.w, gbitmap_get_bounds(nearby[index->row].sprite).size.h));
 	
 	graphics_context_set_text_color(ctx, GColorBlack);
-	graphics_draw_text(ctx, nearby[index->row].name, custom_font, GRect(64, 12, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+	graphics_draw_text(ctx, nearby[index->row].listBuffer, custom_font, GRect(64, 12, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 	
 	graphics_context_set_fill_color(ctx, GColorBlack);
 	gpath_draw_filled(ctx, mini_compass);
@@ -130,7 +130,7 @@ void init(){
 	layer_add_child(window_get_root_layer(list), menu_layer_get_layer(menu));
 	
 	mini_compass = gpath_create(&MINI_COMPASS_INFO);
-	gpath_move_to(mini_compass, GPoint(124, 36));
+	gpath_move_to(mini_compass, GPoint(124, 38));
 	gpath_rotate_to(mini_compass, TRIG_MAX_ANGLE/12);
 	
 	overlay = layer_create(layer_get_bounds(window_get_root_layer(list)));
@@ -140,37 +140,16 @@ void init(){
 	
 	//DUMMY DATA
 	NUM_POKEMON = 3;
+
+	nearby[0].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke25);
+	strncpy(nearby[0].listBuffer, "Pikachu\n\n12 m", sizeof(nearby[0].listBuffer));
+
+	nearby[1].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke83);
+	strncpy(nearby[1].listBuffer, "Farfetchd\n\n53 m", sizeof(nearby[1].listBuffer));
 	
-	nearby[0] = (Pokemon){
-		.distance = 12,
-		.angle = 27,
-		.dex = 25,
-		.sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke25),
-		.name = "Pikachu",
-		.distance = "12 m",
-		.listBuffer = "Pikachu\n\n12 m"
-	};
-	
-	nearby[1] = (Pokemon){
-		.distance = 12,
-		.angle = 27,
-		.dex = 37,
-		.sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke37),
-		.name = "Pokémon",
-		.distance = "32 m",
-		.listBuffer = "Pokémon\n\n32 m"
-	};
-	
-	nearby[2] = (Pokemon){
-		.distance = 12,
-		.angle = 27,
-		.dex = 127,
-		.sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke127),
-		.name = "Other",
-		.distance = "127 m",
-		.listBuffer = "Other\n\n127 m"
-	}
-	
+	nearby[2].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke128);
+	strncpy(nearby[2].listBuffer, "Tauros\n\n121 m", sizeof(nearby[2].listBuffer));
+				
 	menu_layer_reload_data(menu);
 	
 	window_stack_push(list, true);	
