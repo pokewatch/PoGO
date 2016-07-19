@@ -41,17 +41,19 @@ void temp_draw(Layer *layer, GContext *ctx){
 	graphics_context_set_fill_color(ctx, GColorCobaltBlue);
 	graphics_fill_rect(ctx, GRect(0,0,PBL_IF_RECT_ELSE(144,180),16), 0, GCornerNone);
 	
-	graphics_context_set_text_color(ctx, GColorWhite);
-	graphics_draw_text(ctx, "12:34", fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(0,PBL_IF_RECT_ELSE(-2,6),PBL_IF_RECT_ELSE(144,180),16), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
-	
+	#ifdef PBL_RECT
 	graphics_context_set_stroke_color(ctx, GColorWhite);
-	for(int i = 0; i < PBL_IF_RECT_ELSE(144,180); i++){
+	for(int i = 0; i < 144; i++){
 		if(i%2 == 0) graphics_draw_pixel(ctx, GPoint(i, 15));
 	}
+	#endif
 	
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
 	graphics_draw_bitmap_in_rect(ctx, top, GRect(PBL_IF_RECT_ELSE(0,18),16,144,11));
-	graphics_draw_bitmap_in_rect(ctx, bottom, GRect(PBL_IF_RECT_ELSE(0,18),168-11,144,11));
+	graphics_draw_bitmap_in_rect(ctx, bottom, GRect(PBL_IF_RECT_ELSE(0,18),PBL_IF_RECT_ELSE(168,180)-11,144,11));
+	
+	graphics_context_set_text_color(ctx, GColorWhite);
+	graphics_draw_text(ctx, "12:34", fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(0,PBL_IF_RECT_ELSE(-2,4),PBL_IF_RECT_ELSE(144,180),16), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 }
 
 void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void *data){
