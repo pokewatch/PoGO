@@ -27,6 +27,7 @@ typedef struct {
 	char name[64];
 	char distance[8];
 	char listBuffer[128];
+	GPath *compass;
 } Pokemon;
 
 Pokemon nearby[9];
@@ -57,6 +58,12 @@ void temp_draw(Layer *layer, GContext *ctx){
 }
 
 void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void *data){
+	if(index->row == 0){
+		graphics_context_set_fill_color(ctx, GColorWhite);
+		graphics_fill_rect(ctx, layer_get_bounds(cell_layer), 0, GCornerNone);
+		return;
+	}
+	
 	if(menu_cell_layer_is_highlighted(cell_layer)){
 		graphics_context_set_fill_color(ctx, GColorLightGray);
 		graphics_fill_rect(ctx, layer_get_bounds(cell_layer), 0, GCornerNone);
@@ -68,20 +75,21 @@ void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void
 	}
 	
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	graphics_draw_bitmap_in_rect(ctx, nearby[index->row].sprite, GRect(2+30-(gbitmap_get_bounds(nearby[index->row].sprite).size.w/2),30-(gbitmap_get_bounds(nearby[index->row].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row].sprite).size.w, gbitmap_get_bounds(nearby[index->row].sprite).size.h));
+	graphics_draw_bitmap_in_rect(ctx, nearby[index->row-1].sprite, GRect(2+30-(gbitmap_get_bounds(nearby[index->row-1].sprite).size.w/2),30-(gbitmap_get_bounds(nearby[index->row-1].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row-1].sprite).size.w, gbitmap_get_bounds(nearby[index->row-1].sprite).size.h));
 	
 	graphics_context_set_text_color(ctx, GColorBlack);
-	graphics_draw_text(ctx, nearby[index->row].listBuffer, custom_font, GRect(64, 14, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+	graphics_draw_text(ctx, nearby[index->row-1].listBuffer, custom_font, GRect(64, 14, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 	
 	graphics_context_set_fill_color(ctx, GColorBlack);
 	gpath_draw_filled(ctx, mini_compass);
 }
 
 static uint16_t get_num_pokemon(MenuLayer *menu_layer, uint16_t section_index, void *data){
-	return NUM_POKEMON;
+	return NUM_POKEMON + 1;
 }
 
 static int16_t pokemon_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index, void *data){
+	if(cell_index->row == 0) return 20;
 	return 60;
 }
 
@@ -153,6 +161,7 @@ void init(){
 	strncpy(nearby[2].listBuffer, "Tauros\n\n121 m", sizeof(nearby[2].listBuffer));
 				
 	menu_layer_reload_data(menu);
+	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
 	
 	window_stack_push(list, true);	
 }
