@@ -4,12 +4,12 @@ Window *list, *compass;
 MenuLayer *menu;
 Layer *overlay;
 
-GBitmap *nearby[9];
+//GBitmap *nearby[9];
 GBitmap *top, *bottom;
 
-int distances[9];
-int angles[9];
-int pokedex[9];
+//int distances[9];
+//int angles[9];
+//int pokedex[9];
 
 int NUM_POKEMON = 0;
 
@@ -20,21 +20,38 @@ int TEAM = 1;
 
 GFont custom_font;
 
+typedef struct {
+	int angle;
+	int dex;
+	GBitmap *sprite;
+	char *name;
+	char *distance;
+	char *listBuffer;
+} Pokemon;
+
+struct Pokemon nearby[9];
+
+static GPath *mini_compass = NULL;
+static const GPathInfo MINI_COMPASS_INFO = {
+	.num_points = 4,
+	.points = (GPoint []) { {0,-9}, {-6,9}, {0,3}, {6,9} }
+};
+
 void temp_draw(Layer *layer, GContext *ctx){
 	graphics_context_set_fill_color(ctx, GColorCobaltBlue);
-	graphics_fill_rect(ctx, GRect(0,0,144,16), 0, GCornerNone);
+	graphics_fill_rect(ctx, GRect(0,0,PBL_IF_RECT_ELSE(144,180),16), 0, GCornerNone);
 	
 	graphics_context_set_text_color(ctx, GColorWhite);
-	graphics_draw_text(ctx, "12:34", fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(0,-2,144,16), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+	graphics_draw_text(ctx, "12:34", fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(0,PBL_IF_RECT_ELSE(-2,6),PBL_IF_RECT_ELSE(144,180),16), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
 	
 	graphics_context_set_stroke_color(ctx, GColorWhite);
-	for(int i = 0; i < 144; i++){
+	for(int i = 0; i < PBL_IF_RECT_ELSE(144,180); i++){
 		if(i%2 == 0) graphics_draw_pixel(ctx, GPoint(i, 15));
 	}
 	
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	graphics_draw_bitmap_in_rect(ctx, top, GRect(0,16,144,11));
-	graphics_draw_bitmap_in_rect(ctx, bottom, GRect(0,168-11,144,11));
+	graphics_draw_bitmap_in_rect(ctx, top, GRect(PBL_IF_RECT_ELSE(0,18),16,144,11));
+	graphics_draw_bitmap_in_rect(ctx, bottom, GRect(PBL_IF_RECT_ELSE(0,18),168-11,144,11));
 }
 
 void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void *data){
@@ -49,10 +66,13 @@ void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void
 	}
 	
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	graphics_draw_bitmap_in_rect(ctx, nearby[index->row], GRect(4+28-(gbitmap_get_bounds(nearby[index->row]).size.w/2),28-(gbitmap_get_bounds(nearby[index->row]).size.h/2), gbitmap_get_bounds(nearby[index->row]).size.w, gbitmap_get_bounds(nearby[index->row]).size.h));
+	graphics_draw_bitmap_in_rect(ctx, nearby[index->row].sprite, GRect(4+28-(gbitmap_get_bounds(nearby[index->row].sprite).size.w/2),28-(gbitmap_get_bounds(nearby[index->row].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row].sprite).size.w, gbitmap_get_bounds(nearby[index->row].sprite).size.h));
 	
 	graphics_context_set_text_color(ctx, GColorBlack);
-	graphics_draw_text(ctx, "Pokémon\n\n12 m", custom_font, GRect(64, 12, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+	graphics_draw_text(ctx, nearby[index->row].name, custom_font, GRect(64, 12, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+	
+	graphics_context_set_fill_color(ctx, GColorBlack);
+	gpath_draw_filled(ctx, mini_compass);
 }
 
 static uint16_t get_num_pokemon(MenuLayer *menu_layer, uint16_t section_index, void *data){
@@ -97,9 +117,8 @@ void init(){
 	
 	list = window_create();
 	window_set_background_color(list, GColorWhite);
-	layer_set_update_proc(window_get_root_layer(list), temp_draw);
 	
-	menu = menu_layer_create(GRect(0, 15, 144, 168 - 15));
+	menu = menu_layer_create(GRect(0, 16, PBL_IF_RECT_ELSE(144,180), PBL_IF_RECT_ELSE(168,180) - 16));
 	menu_layer_set_callbacks(menu, NULL, (MenuLayerCallbacks){
 		.draw_row = draw_pokemon,
 		.get_num_rows = get_num_pokemon,
@@ -107,9 +126,12 @@ void init(){
 		.select_click = pokemon_click
 	});
 	menu_layer_set_click_config_onto_window(menu, list);
-	//menu_layer_pad_bottom_enable(menu, false);
 	
 	layer_add_child(window_get_root_layer(list), menu_layer_get_layer(menu));
+	
+	mini_compass = gpath_create(&MINI_COMPASS_INFO);
+	gpath_move_to(mini_compass, GPoint(124, 36));
+	gpath_rotate_to(mini_compass, TRIG_MAX_ANGLE/12);
 	
 	overlay = layer_create(layer_get_bounds(window_get_root_layer(list)));
 	layer_set_update_proc(overlay, temp_draw);
@@ -118,17 +140,36 @@ void init(){
 	
 	//DUMMY DATA
 	NUM_POKEMON = 3;
-	nearby[0] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke21);
-	nearby[1] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke75);
-	nearby[2] = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke103);
-
-	distances[0] = 35;
-	distances[1] = 49;
-	distances[2] = 103;
 	
-	angles[0] = 27;
-	angles[1] = 80;
-	angles[2] = 125;
+	nearby[0] = (Pokemon){
+		.distance = 12,
+		.angle = 27,
+		.dex = 25,
+		.sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke25),
+		.name = "Pikachu",
+		.distance = "12 m",
+		.listBuffer = "Pikachu\n\n12 m"
+	};
+	
+	nearby[1] = (Pokemon){
+		.distance = 12,
+		.angle = 27,
+		.dex = 37,
+		.sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke37),
+		.name = "Pokémon",
+		.distance = "32 m",
+		.listBuffer = "Pokémon\n\n32 m"
+	};
+	
+	nearby[2] = (Pokemon){
+		.distance = 12,
+		.angle = 27,
+		.dex = 127,
+		.sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke127),
+		.name = "Other",
+		.distance = "127 m",
+		.listBuffer = "Other\n\n127 m"
+	}
 	
 	menu_layer_reload_data(menu);
 	
