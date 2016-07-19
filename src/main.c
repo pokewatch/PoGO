@@ -68,7 +68,7 @@ void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void
 	}
 	
 	graphics_context_set_compositing_mode(ctx, GCompOpSet);
-	graphics_draw_bitmap_in_rect(ctx, nearby[index->row].sprite, GRect(4+30-(gbitmap_get_bounds(nearby[index->row].sprite).size.w/2),30-(gbitmap_get_bounds(nearby[index->row].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row].sprite).size.w, gbitmap_get_bounds(nearby[index->row].sprite).size.h));
+	graphics_draw_bitmap_in_rect(ctx, nearby[index->row].sprite, GRect(2+30-(gbitmap_get_bounds(nearby[index->row].sprite).size.w/2),30-(gbitmap_get_bounds(nearby[index->row].sprite).size.h/2), gbitmap_get_bounds(nearby[index->row].sprite).size.w, gbitmap_get_bounds(nearby[index->row].sprite).size.h));
 	
 	graphics_context_set_text_color(ctx, GColorBlack);
 	graphics_draw_text(ctx, nearby[index->row].listBuffer, custom_font, GRect(64, 14, 144-64-4, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
