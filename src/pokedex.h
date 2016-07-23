@@ -6,7 +6,7 @@
 
 */
 
-#define NUM_POKEMON 151
+#define NUM_ALL_POKEMON 151
 
 static char * poke_names[] = {
 " 001      \n\nBulbasaur\n\nGrass\nPoison",

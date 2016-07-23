@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include "pokedex.h"
 
 #define KEY_POKEMONID 0
 
@@ -119,10 +120,27 @@ void config(void *context){
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
 
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+  APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
 
-  // TODO
+  // Read pokemon tuple
+  Tuple *pokemon_tuple = dict_find(iterator, KEY_POKEMONID);
 
+  if(pokemon_tuple) {
+    nearby[0].dex = pokemon_tuple->value->int32;
+
+
+    // TODO: refactor ASAP!
+	NUM_POKEMON = 1;
+
+	// test construction of a single Pokemon
+	nearby[0].sprite = gbitmap_create_with_resource(poke_images[nearby[0].dex - 1]);
+    //snprintf(nearby[0].listBuffer, sizeof(nearby[0].listBuffer), "%d", nearby[0].dex);    
+	strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex - 1], sizeof(nearby[0].listBuffer));
+
+	menu_layer_reload_data(menu);
+
+
+  }
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -213,7 +231,7 @@ void init(){
 	
 	nearby[4].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke138);
 	strncpy(nearby[4].listBuffer, "Omanyte\n\n163 m", sizeof(nearby[4].listBuffer));
-	
+
 	menu_layer_reload_data(menu);
 	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
 	
