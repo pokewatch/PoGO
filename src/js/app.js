@@ -10,13 +10,13 @@ var xhrRequest = function (url, type, callback) {
 	xhr.send();
 };
 
-function getPokemon() {
+function getPokemon(latitude, longitude) {
 
 	// static (stable!) example of PokeVision data
 	//var url = 'https://mathewreiss.github.io/PoGO/data.json';
 
 	// live PokeVision data, hard-coded to Ann Arbor for now
-	var url = 'https://pokevision.com/map/data/42.277556681/-83.740878574';
+	var url = 'https://pokevision.com/map/data/' + latitude + '/' + longitude;
 
 	xhrRequest(url, 'GET', 
 		function(responseText) {
@@ -26,30 +26,60 @@ function getPokemon() {
 			// TODO: status check!
 			console.log('status is "' + json.status + '"');
 
-			// TODO: error checking???
-			console.log('pokemon[0].pokemonId is "' + json.pokemon[0].pokemonId + '"');
-			// PokeVision is string for some reason
-			var pokemonId = Number(json.pokemon[0].pokemonId);
-			console.log('pokemonId is "' + pokemonId + '"');
+			// TODO: much better error checking???
+			if (json.pokemon.length > 0) {
+				console.log('pokemon[0].pokemonId is "' + json.pokemon[0].pokemonId + '"');
+				// PokeVision is string for some reason
+				var pokemonId = Number(json.pokemon[0].pokemonId);
+				console.log('pokemonId is "' + pokemonId + '"');
 
-			// Assemble dictionary using our keys
-			var dictionary = {
-				"PokemonId": pokemonId
-			};
+				// Assemble dictionary using our keys
+				var dictionary = {
+					"PokemonId": pokemonId
+				};
 
-			// Send to Pebble
-			Pebble.sendAppMessage(dictionary,
-				function(e) {
-					console.log("AppMessage sent to Pebble successfully!");
-				},
-				function(e) {
-					console.log("Error sending AppMessage to Pebble!");
-				}
-			);
+				// Send to Pebble
+				Pebble.sendAppMessage(dictionary,
+					function(e) {
+						console.log("AppMessage sent to Pebble successfully!");
+					},
+					function(e) {
+						console.log("Error sending AppMessage to Pebble!");
+					}
+				);
+			} else {
+				// no pokemon found!
+				Pebble.showSimpleNotificationOnPebble("No Pokemon found!", "(" + latitude + ", " + longitude + ")");
+			}
+
 
 		}
 	);
 
+}
+
+
+function geolocationSuccess(pos) {
+  console.log('lat= ' + pos.coords.latitude + ' lon= ' + pos.coords.longitude);
+
+  getPokemon(pos.coords.latitude, pos.coords.longitude);
+}
+
+function geolocationError(err) {
+  console.log('location error (' + err.code + '): ' + err.message);
+
+  // TODO: alert user via watchapp instead
+  Pebble.showSimpleNotificationOnPebble("location error", err.message);
+}
+
+function updateLocation() {
+	var options = {
+	  enableHighAccuracy: true,
+	  maximumAge: 10000,
+	  timeout: 10000
+	};
+
+	navigator.geolocation.getCurrentPosition(geolocationSuccess, geolocationError, options);
 }
 
 // Listen for when the watchface is opened
@@ -57,7 +87,7 @@ Pebble.addEventListener('ready',
 	function(e) {
 		console.log('PebbleKit JS ready!');
 
-		getPokemon();
+		updateLocation();
 	}
 );
 
@@ -66,6 +96,6 @@ Pebble.addEventListener('appmessage',
 	function(e) {
 		console.log('AppMessage received!');
 
-		getPokemon();
+		updateLocation();
 	}                     
 );
