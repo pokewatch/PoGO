@@ -1,31 +1,49 @@
+//"use strict";
+
+// XMLHttpRequest helper
+var xhrRequest = function (url, type, callback) {
+	var xhr = new XMLHttpRequest();
+	xhr.onload = function () {
+		callback(this.responseText);
+	};
+	xhr.open(type, url);
+	xhr.send();
+};
 
 function getPokemon() {
-	responseText = '{"status":"success","pokemon":[{"id":"77528950","data":"[]","expiration_time":1469238283,"pokemonId":"39","latitude":42.276610135556,"longitude":-83.732323840051,"uid":"883cae449c7:19","is_alive":true}]}';
 
-	var json = JSON.parse(responseText);
-	console.log(responseText); // JSON.stringify() not necessary!
+	// static (stable!) example of PokeVision data
+	var url = 'https://mathewreiss.github.io/PoGO/data.json';
 
-	// TODO: status check!
-	console.log('status is "' + json.status + '"');
+	xhrRequest(url, 'GET', 
+		function(responseText) {
+			var json = JSON.parse(responseText);
+			console.log(responseText); // JSON.stringify() not necessary!
 
-	// TODO: error checking???
-	console.log('pokemon[0].pokemonId is "' + json.pokemon[0].pokemonId + '"');
-	// PokeVision is string for some reason
-	var pokemonId = Number(json.pokemon[0].pokemonId);
-	console.log('pokemonId is "' + pokemonId + '"');
+			// TODO: status check!
+			console.log('status is "' + json.status + '"');
 
-	// Assemble dictionary using our keys
-	var dictionary = {
-		"PokemonId": pokemonId
-	};
+			// TODO: error checking???
+			console.log('pokemon[0].pokemonId is "' + json.pokemon[0].pokemonId + '"');
+			// PokeVision is string for some reason
+			var pokemonId = Number(json.pokemon[0].pokemonId);
+			console.log('pokemonId is "' + pokemonId + '"');
 
-	// Send to Pebble
-	Pebble.sendAppMessage(dictionary,
-		function(e) {
-			console.log("AppMessage sent to Pebble successfully!");
-		},
-		function(e) {
-			console.log("Error sending AppMessage to Pebble!");
+			// Assemble dictionary using our keys
+			var dictionary = {
+				"PokemonId": pokemonId
+			};
+
+			// Send to Pebble
+			Pebble.sendAppMessage(dictionary,
+				function(e) {
+					console.log("AppMessage sent to Pebble successfully!");
+				},
+				function(e) {
+					console.log("Error sending AppMessage to Pebble!");
+				}
+			);
+
 		}
 	);
 
