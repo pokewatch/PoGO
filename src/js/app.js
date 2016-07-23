@@ -159,3 +159,17 @@ var Pokemon = [
 	{ name : "Mewtwo", type : psychic, stage : 20, caught : 0, species : "Genetic Pokemon"},
 	{ name : "Mew", type : psychic, stage : 21, caught : 0, species : "New Species Pokemon"}
 ];
+
+// Listen for when the watchface is opened
+Pebble.addEventListener('ready', 
+	function(e) {
+		console.log('PebbleKit JS ready!');
+	}
+);
+
+// Listen for when an AppMessage is received
+Pebble.addEventListener('appmessage',
+	function(e) {
+		console.log('AppMessage received!');
+	}                     
+);

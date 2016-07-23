@@ -1,5 +1,7 @@
 #include <pebble.h>
 
+#define KEY_POKEMONID 0
+
 Window *list, *compass;
 MenuLayer *menu;
 Layer *overlay;
@@ -114,10 +116,41 @@ void config(void *context){
 	window_single_repeating_click_subscribe(BUTTON_ID_UP, 200, up);
 }
 
+
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+
+  // TODO
+
+}
+
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
+
 void init(){
+
+	// Register callbacks
+	app_message_register_inbox_received(inbox_received_callback);
+	app_message_register_inbox_dropped(inbox_dropped_callback);
+	app_message_register_outbox_failed(outbox_failed_callback);
+	app_message_register_outbox_sent(outbox_sent_callback);
+
+	// Open AppMessage
+	// TODO: sizes?
 	app_message_open(2048,2048);
-	//app_message_register_inbox_received(inbox);
-	
+
+
 	custom_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PKMN_10));
 	
 	top = gbitmap_create_with_resource(RESOURCE_ID_UI_TOP);
