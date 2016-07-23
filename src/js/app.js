@@ -13,7 +13,10 @@ var xhrRequest = function (url, type, callback) {
 function getPokemon() {
 
 	// static (stable!) example of PokeVision data
-	var url = 'https://mathewreiss.github.io/PoGO/data.json';
+	//var url = 'https://mathewreiss.github.io/PoGO/data.json';
+
+	// live PokeVision data, hard-coded to Ann Arbor for now
+	var url = 'https://pokevision.com/map/data/42.277556681/-83.740878574';
 
 	xhrRequest(url, 'GET', 
 		function(responseText) {
