@@ -133,9 +133,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 	NUM_POKEMON = 1;
 
 	// test construction of a single Pokemon
-	nearby[0].sprite = gbitmap_create_with_resource(poke_images[nearby[0].dex - 1]);
-    //snprintf(nearby[0].listBuffer, sizeof(nearby[0].listBuffer), "%d", nearby[0].dex);    
-	strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex - 1], sizeof(nearby[0].listBuffer));
+	nearby[0].sprite = gbitmap_create_with_resource(poke_images[nearby[0].dex]);
+	strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
 
 	menu_layer_reload_data(menu);
 
