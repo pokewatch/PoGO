@@ -2,6 +2,9 @@
 #include "pokedex.h"
 
 #define KEY_POKEMONID 0
+#define KEY_POKEMONEXPIRATIONTIME 1
+#define KEY_POKEMONLATITUDE 2
+#define KEY_POKEMONLONGITUDE 3
 
 Window *list, *compass;
 MenuLayer *menu;
@@ -122,24 +125,41 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
   APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
 
-  // Read pokemon tuple
-  Tuple *pokemon_tuple = dict_find(iterator, KEY_POKEMONID);
 
-  if(pokemon_tuple) {
-    nearby[0].dex = pokemon_tuple->value->int32;
+  // TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
 
+  time_t now = time(NULL);
+  time_t expiration = now;
+  long int expiration_delta;
 
-    // TODO: refactor ASAP!
-	NUM_POKEMON = 1;
-
-	// test construction of a single Pokemon
-	nearby[0].sprite = gbitmap_create_with_resource(poke_images[nearby[0].dex]);
-	strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
-
-	menu_layer_reload_data(menu);
-
-
+  // Read tuples
+  Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMONID);
+  if(pokemon_id_tuple) {
+    nearby[0].dex = pokemon_id_tuple->value->int32;
   }
+
+  Tuple *pokemon_expiration_tuple = dict_find(iterator, KEY_POKEMONEXPIRATIONTIME);
+  if(pokemon_expiration_tuple) {
+    expiration = pokemon_expiration_tuple->value->int32;
+
+    // TODO: REMOVE! (temp. offset hack for static data while PokeVision down)
+    //expiration += 155844 + 24 * 60;
+  }
+
+  expiration_delta = expiration - now;
+
+  // TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
+
+  // TODO: refactor ASAP!
+  NUM_POKEMON = 1;
+
+  // test construction of a single Pokemon
+  nearby[0].sprite = gbitmap_create_with_resource(poke_images[nearby[0].dex]);
+  //strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
+  snprintf(nearby[0].listBuffer, sizeof(nearby[0].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[0].dex], 
+  	(int) expiration_delta / 60, (int) expiration_delta % 60, 123);    
+  menu_layer_reload_data(menu);
+
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -212,7 +232,7 @@ void init(){
 	layer_set_update_proc(overlay, temp_draw);
 	
 	layer_add_child(window_get_root_layer(list), overlay);
-	
+
 	//DUMMY DATA
 	NUM_POKEMON = 5;
 

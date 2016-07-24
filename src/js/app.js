@@ -12,16 +12,19 @@ var xhrRequest = function (url, type, callback) {
 
 function getPokemon(latitude, longitude) {
 
-	// static (stable!) example of PokeVision data
-	//var url = 'https://mathewreiss.github.io/PoGO/data.json';
-
 	// live PokeVision data, hard-coded to Ann Arbor for now
 	var scanUrl = 'https://pokevision.com/map/scan/' + latitude + '/' + longitude;
 	var dataUrl = 'https://pokevision.com/map/data/' + latitude + '/' + longitude;
 
+	// static (stable!) example of PokeVision data
+	//var scanUrl = 'https://mathewreiss.github.io/PoGO/data.json';
+	//var dataUrl = 'https://mathewreiss.github.io/PoGO/data.json';
+
 	// TODO: is this OK?
 	xhrRequest(scanUrl, 'GET', 
 		function(scanResponseText) {
+
+			// TODO: need to check for "Maintenance..." page - may not even be JSON!
 
 			var scanJson = JSON.parse(scanResponseText);
 			console.log(scanResponseText); // JSON.stringify() not necessary!
