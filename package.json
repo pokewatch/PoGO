@@ -819,7 +819,10 @@
             "watchface": false
         },
         "messageKeys": {
-          "PokemonId": 0
+          "PokemonId": 0,
+          "PokemonExpirationTime": 1,
+          "PokemonLatitude": 2,
+          "PokemonLongitude": 3
         }
     },
     "version": "0.1.0"

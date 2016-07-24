@@ -44,9 +44,20 @@ function getPokemon(latitude, longitude) {
 						var pokemonId = Number(json.pokemon[0].pokemonId);
 						console.log('pokemonId is "' + pokemonId + '"');
 
+						var pokemonExpirationTime = json.pokemon[0].expiration_time;
+						console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
+
+						var pokemonLatitude = json.pokemon[0].latitude;
+						console.log('pokemonLatitude is "' + pokemonLatitude + '"');
+						var pokemonLongitude = json.pokemon[0].longitude;
+						console.log('pokemonLongitude is "' + pokemonLongitude + '"');
+
 						// Assemble dictionary using our keys
 						var dictionary = {
-							"PokemonId": pokemonId
+							"PokemonId": pokemonId,
+							"PokemonExpirationTime": pokemonExpirationTime,
+							"PokemonLatitude": pokemonLatitude,
+							"PokemonLongitude": pokemonLongitude
 						};
 
 						// Send to Pebble
