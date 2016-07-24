@@ -16,42 +16,56 @@ function getPokemon(latitude, longitude) {
 	//var url = 'https://mathewreiss.github.io/PoGO/data.json';
 
 	// live PokeVision data, hard-coded to Ann Arbor for now
-	var url = 'https://pokevision.com/map/data/' + latitude + '/' + longitude;
+	var scanUrl = 'https://pokevision.com/map/scan/' + latitude + '/' + longitude;
+	var dataUrl = 'https://pokevision.com/map/data/' + latitude + '/' + longitude;
 
-	xhrRequest(url, 'GET', 
-		function(responseText) {
-			var json = JSON.parse(responseText);
-			console.log(responseText); // JSON.stringify() not necessary!
+	// TODO: is this OK?
+	xhrRequest(scanUrl, 'GET', 
+		function(scanResponseText) {
 
-			// TODO: status check!
-			console.log('status is "' + json.status + '"');
+			var scanJson = JSON.parse(scanResponseText);
+			console.log(scanResponseText); // JSON.stringify() not necessary!
 
-			// TODO: much better error checking???
-			if (json.pokemon.length > 0) {
-				console.log('pokemon[0].pokemonId is "' + json.pokemon[0].pokemonId + '"');
-				// PokeVision is string for some reason
-				var pokemonId = Number(json.pokemon[0].pokemonId);
-				console.log('pokemonId is "' + pokemonId + '"');
+			// TODO: check scanResponseText success (although...does throttling error matter
+			// since we can still view pokes from last scan...?
 
-				// Assemble dictionary using our keys
-				var dictionary = {
-					"PokemonId": pokemonId
-				};
+			xhrRequest(dataUrl, 'GET', 
+				function(dataResponseText) {
+					var json = JSON.parse(dataResponseText);
+					console.log(dataResponseText); // JSON.stringify() not necessary!
 
-				// Send to Pebble
-				Pebble.sendAppMessage(dictionary,
-					function(e) {
-						console.log("AppMessage sent to Pebble successfully!");
-					},
-					function(e) {
-						console.log("Error sending AppMessage to Pebble!");
+					// TODO: status check!
+					console.log('status is "' + json.status + '"');
+
+					// TODO: much better error checking???
+					if (json.pokemon.length > 0) {
+						console.log('pokemon[0].pokemonId is "' + json.pokemon[0].pokemonId + '"');
+						// PokeVision is string for some reason
+						var pokemonId = Number(json.pokemon[0].pokemonId);
+						console.log('pokemonId is "' + pokemonId + '"');
+
+						// Assemble dictionary using our keys
+						var dictionary = {
+							"PokemonId": pokemonId
+						};
+
+						// Send to Pebble
+						Pebble.sendAppMessage(dictionary,
+							function(e) {
+								console.log("AppMessage sent to Pebble successfully!");
+							},
+							function(e) {
+								console.log("Error sending AppMessage to Pebble!");
+							}
+						);
+					} else {
+						// no pokemon found!
+						Pebble.showSimpleNotificationOnPebble("No Pokemon found!", "(" + latitude + ", " + longitude + ")");
 					}
-				);
-			} else {
-				// no pokemon found!
-				Pebble.showSimpleNotificationOnPebble("No Pokemon found!", "(" + latitude + ", " + longitude + ")");
-			}
 
+
+				}
+			);
 
 		}
 	);
