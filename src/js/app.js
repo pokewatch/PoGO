@@ -64,8 +64,19 @@ function getPokemon(latitude, longitude) {
 
 							var pokemonDistance = getDistance(latitude, longitude, pokemonLatitude, pokemonLongitude);		
 
-							// TODO: add to array!
-							allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
+							// fails on iOS!
+							// per @katharine:
+							// > PebbleKit JS Android is not to spec.
+							//allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
+
+							var pokemonData = {
+								"i": i, 
+								"pokemonId": pokemonId, 
+								"pokemonExpirationTime": pokemonExpirationTime, 
+								"pokemonDistance": pokemonDistance
+							};
+							allNearbyPokemon.push(pokemonData);
+
 						}
 
 						console.log("allNearbyPokemon: " + JSON.stringify(allNearbyPokemon));
