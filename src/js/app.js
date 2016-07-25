@@ -43,43 +43,57 @@ function getPokemon(latitude, longitude) {
 					// TODO: much better error checking???
 					if (json.pokemon.length > 0) {
 
+						var allNearbyPokemon = [];
+
+						var i;
+						for (i = 0; i < json.pokemon.length - 1; i++) {
+
+							// TODO: should still actually verify vs. using blindly!
+							console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
+							// PokeVision is string for some reason
+							var pokemonId = Number(json.pokemon[i].pokemonId);
+							console.log('pokemonId is "' + pokemonId + '"');
+
+							var pokemonExpirationTime = json.pokemon[i].expiration_time;
+							console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
+
+							var pokemonLatitude = json.pokemon[i].latitude;
+							console.log('pokemonLatitude is "' + pokemonLatitude + '"');
+							var pokemonLongitude = json.pokemon[i].longitude;
+							console.log('pokemonLongitude is "' + pokemonLongitude + '"');
+
+							var pokemonDistance = getDistance(latitude, longitude, pokemonLatitude, pokemonLongitude);		
+
+							// TODO: add to array!
+							allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
+						}
+
+						console.log("allNearbyPokemon: " + JSON.stringify(allNearbyPokemon));
+
+						// sort by distance
+						allNearbyPokemon.sort(function(a, b) {
+						    return a.pokemonDistance - b.pokemonDistance;
+						});
+
 						// Assemble dictionary using our keys
 						var dictionary = {};
 
-						var i;
-						for (i = 0; i < 9; i++) {
+						// take closest 9 (or fewer if not available; sentinel indicated by pokemonId == 0)
+						var j;
+						for (j = 0; j < 9; j++) {
 
-							// fill remaining w/ empty for now - this will go away soon!
-							var pokemonId = 0;
-							var pokemonExpirationTime = 0;
-							var pokemonLatitude = 0;
-							var pokemonLongitude = 0;
-							var pokemonDistance = 0;
-
-							if (i <= json.pokemon.length - 1) {
-								// TODO: should still actually verify vs. using blindly!
-								console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
-								// PokeVision is string for some reason
-								pokemonId = Number(json.pokemon[i].pokemonId);
-								console.log('pokemonId is "' + pokemonId + '"');
-
-								pokemonExpirationTime = json.pokemon[i].expiration_time;
-								console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
-
-								pokemonLatitude = json.pokemon[i].latitude;
-								console.log('pokemonLatitude is "' + pokemonLatitude + '"');
-								pokemonLongitude = json.pokemon[i].longitude;
-								console.log('pokemonLongitude is "' + pokemonLongitude + '"');
-
-								pokemonDistance = getDistance(latitude, longitude, pokemonLatitude, pokemonLongitude);								
+							if (j < json.pokemon.length - 1) {
+								dictionary["Pokemon" + (j + 1) + "Id"] = allNearbyPokemon[j].pokemonId;
+								dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = allNearbyPokemon[j].pokemonExpirationTime;
+								dictionary["Pokemon" + (j + 1) + "Distance"] = allNearbyPokemon[j].pokemonDistance;								
+							} else {
+								dictionary["Pokemon" + (j + 1) + "Id"] = 0;
+								dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = 0;
+								dictionary["Pokemon" + (j + 1) + "Distance"] = 0;								
+								break;
 							}
 
-							dictionary["Pokemon" + (i + 1) + "Id"] = pokemonId;
-							dictionary["Pokemon" + (i + 1) + "ExpirationTime"] = pokemonExpirationTime;
-							dictionary["Pokemon" + (i + 1) + "Distance"] = pokemonDistance;
 						}
-
-						// TODO: really we should grab ALL available and sort by distance, returning 9 closest, right?
 
 						console.log("dictionary: " + JSON.stringify(dictionary));
 
