@@ -819,9 +819,33 @@
             "watchface": false
         },
         "messageKeys": {
-          "PokemonId": 0,
-          "PokemonExpirationTime": 1,
-          "PokemonDistance": 2
+          "Pokemon1Id": 0,
+          "Pokemon1ExpirationTime": 1,
+          "Pokemon1Distance": 2,
+          "Pokemon2Id": 3,
+          "Pokemon2ExpirationTime": 4,
+          "Pokemon2Distance": 5,
+          "Pokemon3Id": 6,
+          "Pokemon3ExpirationTime": 7,
+          "Pokemon3Distance": 8,
+          "Pokemon4Id": 9,
+          "Pokemon4ExpirationTime": 10,
+          "Pokemon4Distance": 11,
+          "Pokemon5Id": 12,
+          "Pokemon5ExpirationTime": 13,
+          "Pokemon5Distance": 14,
+          "Pokemon6Id": 15,
+          "Pokemon6ExpirationTime": 16,
+          "Pokemon6Distance": 17,
+          "Pokemon7Id": 18,
+          "Pokemon7ExpirationTime": 19,
+          "Pokemon7Distance": 20,
+          "Pokemon8Id": 21,
+          "Pokemon8ExpirationTime": 22,
+          "Pokemon8Distance": 23,
+          "Pokemon9Id": 24,
+          "Pokemon9ExpirationTime": 25,
+          "Pokemon9Distance": 26
         }
     },
     "version": "0.1.0"

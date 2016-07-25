@@ -1,9 +1,14 @@
 #include <pebble.h>
 #include "pokedex.h"
 
-#define KEY_POKEMONID 0
-#define KEY_POKEMONEXPIRATIONTIME 1
-#define KEY_POKEMONDISTANCE 2
+// TODO: replace crude hack with https://github.com/smallstoneapps/data-processor ;)
+#define KEY_POKEMON1ID 0
+#define KEY_POKEMON1EXPIRATIONTIME 1
+#define KEY_POKEMON1DISTANCE 2
+// . . .
+//#define KEY_POKEMON9ID 24
+//#define KEY_POKEMON9EXPIRATIONTIME 5
+//#define KEY_POKEMON9DISTANCE 26
 
 Window *list, *compass;
 MenuLayer *menu;
@@ -124,46 +129,50 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
   APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
 
-
-  // TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
-
   time_t now = time(NULL);
   time_t expiration = now;
   long int expiration_delta;
   int distance = 0;
 
-  // Read tuples
-  Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMONID);
-  if(pokemon_id_tuple) {
-    nearby[0].dex = pokemon_id_tuple->value->int32;
+  // TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
+  for(int i = 0; i < 9; i++){
+
+  	// Read tuples
+  	Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMON1ID + (i * 3));
+  	if(pokemon_id_tuple) {
+  	  nearby[i].dex = pokemon_id_tuple->value->int32;
+  	}
+
+  	// break on first 0 ID - indicates end of data
+  	if (nearby[i].dex == 0) {
+  		break;
+  	}
+
+  	Tuple *pokemon_expiration_tuple = dict_find(iterator, KEY_POKEMON1EXPIRATIONTIME + (i * 3));
+  	if(pokemon_expiration_tuple) {
+      expiration = pokemon_expiration_tuple->value->int32;
+  	}
+
+  	expiration_delta = expiration - now;
+
+  	Tuple *pokemon_distance_tuple = dict_find(iterator, KEY_POKEMON1DISTANCE + (i * 3));
+  	if(pokemon_distance_tuple) {
+  	  distance = pokemon_distance_tuple->value->int32;
+  	}
+
+  	// TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
+
+  	// TODO: refactor ASAP!
+  	NUM_POKEMON = i + 1;
+
+  	// add single Pokemon
+  	nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
+  	//strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
+  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[i].dex], 
+  	  (int) expiration_delta / 60, (int) expiration_delta % 60, distance); 
+
   }
-
-  Tuple *pokemon_expiration_tuple = dict_find(iterator, KEY_POKEMONEXPIRATIONTIME);
-  if(pokemon_expiration_tuple) {
-    expiration = pokemon_expiration_tuple->value->int32;
-
-    // TODO: REMOVE! (temp. offset hack for static data while PokeVision down)
-    //expiration += 155844 + 24 * 60;
-  }
-
-  expiration_delta = expiration - now;
-
-
-  Tuple *pokemon_distance_tuple = dict_find(iterator, KEY_POKEMONDISTANCE);
-  if(pokemon_distance_tuple) {
-    distance = pokemon_distance_tuple->value->int32;
-  }
-
-  // TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
-
-  // TODO: refactor ASAP!
-  NUM_POKEMON = 1;
-
-  // test construction of a single Pokemon
-  nearby[0].sprite = gbitmap_create_with_resource(poke_images[nearby[0].dex]);
-  //strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
-  snprintf(nearby[0].listBuffer, sizeof(nearby[0].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[0].dex], 
-  	(int) expiration_delta / 60, (int) expiration_delta % 60, distance);    
+  
   menu_layer_reload_data(menu);
 
 }

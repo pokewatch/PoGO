@@ -42,27 +42,46 @@ function getPokemon(latitude, longitude) {
 
 					// TODO: much better error checking???
 					if (json.pokemon.length > 0) {
-						console.log('pokemon[0].pokemonId is "' + json.pokemon[0].pokemonId + '"');
-						// PokeVision is string for some reason
-						var pokemonId = Number(json.pokemon[0].pokemonId);
-						console.log('pokemonId is "' + pokemonId + '"');
-
-						var pokemonExpirationTime = json.pokemon[0].expiration_time;
-						console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
-
-						var pokemonLatitude = json.pokemon[0].latitude;
-						console.log('pokemonLatitude is "' + pokemonLatitude + '"');
-						var pokemonLongitude = json.pokemon[0].longitude;
-						console.log('pokemonLongitude is "' + pokemonLongitude + '"');
-
-						var pokemonDistance = getDistance(latitude, longitude, pokemonLatitude, pokemonLongitude);
 
 						// Assemble dictionary using our keys
-						var dictionary = {
-							"PokemonId": pokemonId,
-							"PokemonExpirationTime": pokemonExpirationTime,
-							"PokemonDistance": pokemonDistance
-						};
+						var dictionary = {};
+
+						var i;
+						for (i = 0; i < 9; i++) {
+
+							// fill remaining w/ empty for now - this will go away soon!
+							var pokemonId = 0;
+							var pokemonExpirationTime = 0;
+							var pokemonLatitude = 0;
+							var pokemonLongitude = 0;
+							var pokemonDistance = 0;
+
+							if (i <= json.pokemon.length - 1) {
+								// TODO: should still actually verify vs. using blindly!
+								console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
+								// PokeVision is string for some reason
+								pokemonId = Number(json.pokemon[i].pokemonId);
+								console.log('pokemonId is "' + pokemonId + '"');
+
+								pokemonExpirationTime = json.pokemon[i].expiration_time;
+								console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
+
+								pokemonLatitude = json.pokemon[i].latitude;
+								console.log('pokemonLatitude is "' + pokemonLatitude + '"');
+								pokemonLongitude = json.pokemon[i].longitude;
+								console.log('pokemonLongitude is "' + pokemonLongitude + '"');
+
+								pokemonDistance = getDistance(latitude, longitude, pokemonLatitude, pokemonLongitude);								
+							}
+
+							dictionary["Pokemon" + (i + 1) + "Id"] = pokemonId;
+							dictionary["Pokemon" + (i + 1) + "ExpirationTime"] = pokemonExpirationTime;
+							dictionary["Pokemon" + (i + 1) + "Distance"] = pokemonDistance;
+						}
+
+						// TODO: really we should grab ALL available and sort by distance, returning 9 closest, right?
+
+						console.log("dictionary: " + JSON.stringify(dictionary));
 
 						// Send to Pebble
 						Pebble.sendAppMessage(dictionary,
