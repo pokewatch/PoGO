@@ -845,7 +845,8 @@
           "Pokemon8Distance": 23,
           "Pokemon9Id": 24,
           "Pokemon9ExpirationTime": 25,
-          "Pokemon9Distance": 26
+          "Pokemon9Distance": 26,
+          "RequestType": 27
         }
     },
     "version": "0.1.0"

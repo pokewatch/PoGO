@@ -9,6 +9,7 @@
 //#define KEY_POKEMON9ID 24
 //#define KEY_POKEMON9EXPIRATIONTIME 5
 //#define KEY_POKEMON9DISTANCE 26
+#define KEY_REQUESTTYPE 27
 
 Window *list, *compass;
 MenuLayer *menu;
@@ -125,6 +126,28 @@ void config(void *context){
 }
 
 
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+
+  // call API on the 15s (for now until distance refresh implemented)
+  if (tick_time->tm_sec % 15 == 0) {
+
+  	APP_LOG(APP_LOG_LEVEL_INFO, "tick_handler() 0/15/30/45");
+
+  	// Begin dictionary
+  	DictionaryIterator *iter;
+  	app_message_outbox_begin(&iter);
+
+  	// RequestType is currently meaningless, but w/b used for e.g. "full" API call vs. distance refresh
+
+  	// Add key-value pairs
+  	dict_write_cstring(iter, KEY_REQUESTTYPE, "");
+
+  	// Send the message!
+  	app_message_outbox_send();
+
+  }
+}
+
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
 
   APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
@@ -165,7 +188,13 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   	// TODO: refactor ASAP!
   	NUM_POKEMON = i + 1;
 
-  	// add single Pokemon
+
+  	// need to destroy old bitmap first
+  	gbitmap_destroy(nearby[i].sprite);
+
+  	// TODO: recycle instead, since it will realistically be just a few pokemon based on data so far
+  	// TODO: and do a better job of clean-up in general...?
+
   	nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
   	//strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
   	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[i].dex], 
@@ -201,6 +230,8 @@ void init(){
 	// Open AppMessage
 	// TODO: sizes?
 	app_message_open(2048,2048);
+
+  	tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 
 
 	custom_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PKMN_10));
