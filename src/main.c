@@ -3,8 +3,7 @@
 
 #define KEY_POKEMONID 0
 #define KEY_POKEMONEXPIRATIONTIME 1
-#define KEY_POKEMONLATITUDE 2
-#define KEY_POKEMONLONGITUDE 3
+#define KEY_POKEMONDISTANCE 2
 
 Window *list, *compass;
 MenuLayer *menu;
@@ -131,6 +130,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   time_t now = time(NULL);
   time_t expiration = now;
   long int expiration_delta;
+  int distance = 0;
 
   // Read tuples
   Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMONID);
@@ -148,6 +148,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
   expiration_delta = expiration - now;
 
+
+  Tuple *pokemon_distance_tuple = dict_find(iterator, KEY_POKEMONDISTANCE);
+  if(pokemon_distance_tuple) {
+    distance = pokemon_distance_tuple->value->int32;
+  }
+
   // TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
 
   // TODO: refactor ASAP!
@@ -157,7 +163,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   nearby[0].sprite = gbitmap_create_with_resource(poke_images[nearby[0].dex]);
   //strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
   snprintf(nearby[0].listBuffer, sizeof(nearby[0].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[0].dex], 
-  	(int) expiration_delta / 60, (int) expiration_delta % 60, 123);    
+  	(int) expiration_delta / 60, (int) expiration_delta % 60, distance);    
   menu_layer_reload_data(menu);
 
 }

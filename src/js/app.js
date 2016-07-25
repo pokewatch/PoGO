@@ -55,12 +55,13 @@ function getPokemon(latitude, longitude) {
 						var pokemonLongitude = json.pokemon[0].longitude;
 						console.log('pokemonLongitude is "' + pokemonLongitude + '"');
 
+						var pokemonDistance = getDistance(latitude, longitude, pokemonLatitude, pokemonLongitude);
+
 						// Assemble dictionary using our keys
 						var dictionary = {
 							"PokemonId": pokemonId,
 							"PokemonExpirationTime": pokemonExpirationTime,
-							"PokemonLatitude": pokemonLatitude,
-							"PokemonLongitude": pokemonLongitude
+							"PokemonDistance": pokemonDistance
 						};
 
 						// Send to Pebble
@@ -127,3 +128,102 @@ Pebble.addEventListener('appmessage',
 		updateLocation();
 	}                     
 );
+
+
+// based on @mathew's process_distance()
+function getDistance(myLatitude, myLongitude, pkmnLatitude, pkmnLongitude) {
+	var distance;
+
+	var lat1 = myLatitude, lon1 = myLongitude;
+	var lat2 = pkmnLatitude, lon2 = pkmnLongitude;
+	
+	var dLat = toRadians(lat2-lat1);
+	var dLon = toRadians(lon2-lon1);
+	
+	lat1 = toRadians(lat1);
+	lat2 = toRadians(lat2);
+	
+	var y = Math.sin(dLon) * Math.cos(lat2);
+	var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+		
+	var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2) * Math.sin(dLon/2);
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+	
+	//distance = convert_units(c*3959);
+	// numeric (meters) for now since actual data doesn't appear to reach kms
+	distance = (c*3959) * 1.60934 * 1000;
+	
+	console.log("Start Lat: " + lat1);
+	console.log("Start Lon: " + lon1);
+	console.log("End Lat: " + lat2);
+	console.log("End Lon: " + lon2);
+	console.log("Distance: " + distance);
+
+	return distance;
+}
+
+function getBearing(myLatitude, myLongitude, pkmnLatitude, pkmnLongitude) {
+	var bearing;
+
+	var lat1 = myLatitude, lon1 = myLongitude;
+	var lat2 = pkmnLatitude, lon2 = pkmnLongitude;
+	
+	var dLat = toRadians(lat2-lat1);
+	var dLon = toRadians(lon2-lon1);
+	
+	lat1 = toRadians(lat1);
+	lat2 = toRadians(lat2);
+	
+	var y = Math.sin(dLon) * Math.cos(lat2);
+	var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+	
+	bearing = toDegrees(Math.atan2(y,x));
+	if(bearing < 0) bearing = 360-Math.abs(bearing);
+	
+	console.log("Start Lat: " + lat1);
+	console.log("Start Lon: " + lon1);
+	console.log("End Lat: " + lat2);
+	console.log("End Lon: " + lon2);
+	console.log("Bearing: " + bearing);
+
+	return bearing;
+}
+
+// TODO: move to own .js or maybe @mathew already has a lib?
+
+function toRadians(degrees) {
+	return degrees * Math.PI / 180;
+}
+
+function toDegrees(radians) {
+	return radians * 180 / Math.PI;
+}
+
+function convert_units(old_distance) {
+	var new_distance;
+	
+	old_distance *= 1.60934; //Convert miles to km
+	
+	if(old_distance < 0.1){
+		new_distance = old_distance * 1000.0;
+		
+		if(new_distance < accuracy){
+			new_distance = "< " + (accuracy/10).toFixed(0)*10 + " m";
+		}
+		else{
+			new_distance += "";
+			new_distance = new_distance.substring(0, new_distance.indexOf('.') + 2);
+			new_distance += " m";
+		}
+	}
+	else{
+		new_distance = old_distance + "";
+		new_distance = new_distance.substring(0, new_distance.indexOf('.') + 3);
+		new_distance += " km";
+	}
+	//}
+	
+	if(new_distance.charAt(0) === '.') new_distance = "0" + new_distance;
+	
+	return new_distance;
+}
