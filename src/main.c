@@ -239,6 +239,7 @@ void init(){
 	
 	layer_add_child(window_get_root_layer(list), overlay);
 
+/*
 	//DUMMY DATA
 	NUM_POKEMON = 5;
 
@@ -256,6 +257,12 @@ void init(){
 	
 	nearby[4].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke138);
 	strncpy(nearby[4].listBuffer, "Omanyte\n\n163 m", sizeof(nearby[4].listBuffer));
+*/
+	// crude loading message
+	NUM_POKEMON = 1;
+
+	nearby[0].sprite = gbitmap_create_with_resource(poke_images[0]);
+	strncpy(nearby[0].listBuffer, "Loading...", sizeof(nearby[0].listBuffer));
 
 	menu_layer_reload_data(menu);
 	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
