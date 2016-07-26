@@ -13,118 +13,131 @@ var xhrRequest = function (url, type, callback) {
 function getPokemon(latitude, longitude) {
 
 	// live PokeVision data, hard-coded to Ann Arbor for now
-	var scanUrl = 'https://pokevision.com/map/scan/' + latitude + '/' + longitude;
-	var dataUrl = 'https://pokevision.com/map/data/' + latitude + '/' + longitude;
+	//var scanUrl = 'https://pokevision.com/map/scan/' + latitude + '/' + longitude;
+	//var dataUrl = 'https://pokevision.com/map/data/' + latitude + '/' + longitude;
 
 	// static (stable!) example of PokeVision data
 	//var scanUrl = 'https://mathewreiss.github.io/PoGO/data.json';
 	//var dataUrl = 'https://mathewreiss.github.io/PoGO/data.json';
 
-	// TODO: is this OK?
-	xhrRequest(scanUrl, 'GET', 
-		function(scanResponseText) {
+	// who needs PokeVision? :P
 
-			// TODO: need to check for "Maintenance..." page - may not even be JSON!
+	// TODO: figure out real/sensible (configurable?!) values for this
+	var latitudeOffset = (42.21292056305407 - 42.2070240993399) / 2;
+	var longitudeOffset = (-83.68226052392578 - -83.65136147607421) / 2;
+	console.log("latitudeOffset: " + latitudeOffset);
+	console.log("longitude: " + longitudeOffset);
 
-			var scanJson = JSON.parse(scanResponseText);
-			console.log(scanResponseText); // JSON.stringify() not necessary!
 
-			// TODO: check scanResponseText success (although...does throttling error matter
-			// since we can still view pokes from last scan...?
+	// * * * TODO: STILL NEED SCAN!!! * * *
 
-			xhrRequest(dataUrl, 'GET', 
-				function(dataResponseText) {
-					var json = JSON.parse(dataResponseText);
-					console.log(dataResponseText); // JSON.stringify() not necessary!
+	// !!! replace TODO_REPLACE_SERVER_URL before using !!!
+	var server = TODO_REPLACE_SERVER_URL;
+	var dataUrl = server + "/raw_data" + 
+		"?pokemon=true&pokestops=true&gyms=true&scanned=false" + 
+		"&swLat=" + (latitude - latitudeOffset) + 
+		"&swLng=" + (longitude + longitudeOffset) + 
+		"&neLat=" + (latitude + latitudeOffset) + 
+		"&neLng=" + (longitude - longitudeOffset);
+	console.log("dataUrl: " + dataUrl);
 
-					// TODO: status check!
-					console.log('status is "' + json.status + '"');
 
-					// TODO: much better error checking???
-					if (json.pokemon.length > 0) {
+	xhrRequest(dataUrl, 'GET', 
+		function(dataResponseText) {
+			var json = JSON.parse(dataResponseText);
+			console.log(dataResponseText); // JSON.stringify() not necessary!
 
-						var allNearbyPokemon = [];
+			// TODO: much better error checking???
+			if (json.pokemons.length > 0) {
 
-						var i;
-						for (i = 0; i < json.pokemon.length - 1; i++) {
+				var allNearbyPokemon = [];
 
-							// TODO: should still actually verify vs. using blindly!
-							console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
-							// PokeVision is string for some reason
-							var pokemonId = Number(json.pokemon[i].pokemonId);
-							console.log('pokemonId is "' + pokemonId + '"');
+				var i;
+				for (i = 0; i < json.pokemons.length - 1; i++) {
 
-							var pokemonExpirationTime = json.pokemon[i].expiration_time;
-							console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
+					var pokemon = json.pokemons[i];
 
-							var pokemonLatitude = json.pokemon[i].latitude;
-							console.log('pokemonLatitude is "' + pokemonLatitude + '"');
-							var pokemonLongitude = json.pokemon[i].longitude;
-							console.log('pokemonLongitude is "' + pokemonLongitude + '"');
+					// TODO: gyms, stops, etc.!?
 
-							var pokemonDistance = getDistance(latitude, longitude, pokemonLatitude, pokemonLongitude);		
+					// TODO: should still actually verify vs. using blindly!
+					console.log('pokemons[' + i + '].pokemon_id is "' + pokemon.pokemon_id + '"');
+					// PokeVision is string for some reason
+					var pokemonId = Number(pokemon.pokemon_id);
+					console.log('pokemonId is "' + pokemonId + '"');
 
-							// fails on iOS!
-							// per @katharine:
-							// > PebbleKit JS Android is not to spec.
-							//allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
+					// TOOD: no need for .h translation any more!
+					var pokemonName = pokemon.pokemon_name;
+					console.log('pokemonName is "' + pokemonName + '"');
 
-							var pokemonData = {
-								"i": i, 
-								"pokemonId": pokemonId, 
-								"pokemonExpirationTime": pokemonExpirationTime, 
-								"pokemonDistance": pokemonDistance
-							};
-							allNearbyPokemon.push(pokemonData);
+					var pokemonExpirationTime = pokemon.disappear_time;
+					pokemonExpirationTime /= 1000; // new API is in JS ms vs. epoch
+					console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
 
-						}
+					var pokemonLatitude = pokemon.latitude;
+					console.log('pokemonLatitude is "' + pokemonLatitude + '"');
+					var pokemonLongitude = pokemon.longitude;
+					console.log('pokemonLongitude is "' + pokemonLongitude + '"');
 
-						console.log("allNearbyPokemon: " + JSON.stringify(allNearbyPokemon));
+					var pokemonDistance = getDistance(latitude, longitude, pokemonLatitude, pokemonLongitude);		
 
-						// sort by distance
-						allNearbyPokemon.sort(function(a, b) {
-						    return a.pokemonDistance - b.pokemonDistance;
-						});
+					// fails on iOS!
+					// per @katharine:
+					// > PebbleKit JS Android is not to spec.
+					//allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
 
-						// Assemble dictionary using our keys
-						var dictionary = {};
-
-						// take closest 9 (or fewer if not available; sentinel indicated by pokemonId == 0)
-						var j;
-						for (j = 0; j < 9; j++) {
-
-							if (j < json.pokemon.length - 1) {
-								dictionary["Pokemon" + (j + 1) + "Id"] = allNearbyPokemon[j].pokemonId;
-								dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = allNearbyPokemon[j].pokemonExpirationTime;
-								dictionary["Pokemon" + (j + 1) + "Distance"] = allNearbyPokemon[j].pokemonDistance;								
-							} else {
-								dictionary["Pokemon" + (j + 1) + "Id"] = 0;
-								dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = 0;
-								dictionary["Pokemon" + (j + 1) + "Distance"] = 0;								
-								break;
-							}
-
-						}
-
-						console.log("dictionary: " + JSON.stringify(dictionary));
-
-						// Send to Pebble
-						Pebble.sendAppMessage(dictionary,
-							function(e) {
-								console.log("AppMessage sent to Pebble successfully!");
-							},
-							function(e) {
-								console.log("Error sending AppMessage to Pebble!");
-							}
-						);
-					} else {
-						// no pokemon found!
-						Pebble.showSimpleNotificationOnPebble("No Pokemon found!", "(" + latitude + ", " + longitude + ")");
-					}
-
+					var pokemonData = {
+						"i": i, 
+						"pokemonId": pokemonId, 
+						"pokemonExpirationTime": pokemonExpirationTime, 
+						"pokemonDistance": pokemonDistance
+					};
+					allNearbyPokemon.push(pokemonData);
 
 				}
-			);
+
+				console.log("allNearbyPokemon: " + JSON.stringify(allNearbyPokemon));
+
+				// sort by distance
+				allNearbyPokemon.sort(function(a, b) {
+				    return a.pokemonDistance - b.pokemonDistance;
+				});
+
+				// Assemble dictionary using our keys
+				var dictionary = {};
+
+				// take closest 9 (or fewer if not available; sentinel indicated by pokemonId == 0)
+				var j;
+				for (j = 0; j < 9; j++) {
+
+					if (j < json.pokemons.length - 1) {
+						dictionary["Pokemon" + (j + 1) + "Id"] = allNearbyPokemon[j].pokemonId;
+						dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = allNearbyPokemon[j].pokemonExpirationTime;
+						dictionary["Pokemon" + (j + 1) + "Distance"] = allNearbyPokemon[j].pokemonDistance;								
+					} else {
+						dictionary["Pokemon" + (j + 1) + "Id"] = 0;
+						dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = 0;
+						dictionary["Pokemon" + (j + 1) + "Distance"] = 0;								
+						break;
+					}
+
+				}
+
+				console.log("dictionary: " + JSON.stringify(dictionary));
+
+				// Send to Pebble
+				Pebble.sendAppMessage(dictionary,
+					function(e) {
+						console.log("AppMessage sent to Pebble successfully!");
+					},
+					function(e) {
+						console.log("Error sending AppMessage to Pebble!");
+					}
+				);
+			} else {
+				// no pokemon found!
+				Pebble.showSimpleNotificationOnPebble("No Pokemon found!", "(" + latitude + ", " + longitude + ")");
+			}
+
 
 		}
 	);
