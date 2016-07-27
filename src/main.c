@@ -15,7 +15,7 @@
 
 Window *splash, *list, *compass;
 MenuLayer *menu;
-StatusBarLayer *statusBar;
+StatusBarLayer *status_bar;
 Layer *overlay;
 
 //GBitmap *nearby[9];
@@ -299,6 +299,14 @@ void init(){
 	overlay = layer_create(layer_get_bounds(window_get_root_layer(list)));
 	layer_set_update_proc(overlay, temp_draw);
 
+	status_bar = status_bar_layer_create();
+	int16_t width = layer_get_bounds(overlay).size.w;
+	GRect frame = GRect(0, -1, width, STATUS_BAR_LAYER_HEIGHT); // -1 so the overlay still shows up beneath it
+	layer_set_frame(status_bar_layer_get_layer(status_bar), frame);
+	status_bar_layer_set_colors(status_bar, GColorCobaltBlue, GColorWhite);
+	layer_add_child(overlay, status_bar_layer_get_layer(status_bar));
+
+
 	layer_add_child(window_get_root_layer(list), overlay);
 
 /*
@@ -331,7 +339,10 @@ void init(){
 	menu_layer_reload_data(menu);
 	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
 
+
+
 	window_stack_push(list, true);
+
 }
 
 void deinit(){
