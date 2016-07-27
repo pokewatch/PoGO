@@ -41,13 +41,11 @@ function getPokemon() { //(latitude, longitude) {
 		//var dataUrl = 'https://mathewreiss.github.io/PoGO/data.json';
 
 		// TODO: is this OK?
-		xhrRequest(scanUrl, 'GET',
-		function(scanResponseText) {
-
+		xhrRequest(scanUrl, 'GET', function(scanResponseText) {
 			if (scanResponseText.indexOf("maintenance") > -1) {
-                console.log("Down for maintenance");
-                MessageQueue.sendAppMessage({"status": 0}, messageSuccessHandler, messageFailureHandler);
-            }
+				console.log("Down for maintenance");
+				MessageQueue.sendAppMessage({"status": 0}, messageSuccessHandler, messageFailureHandler);
+			}
 
 			var scanJson = JSON.parse(scanResponseText);
 			console.log(scanResponseText); // JSON.stringify() not necessary!
@@ -55,8 +53,7 @@ function getPokemon() { //(latitude, longitude) {
 			// TODO: check scanResponseText success (although...does throttling error matter
 			// since we can still view pokes from last scan...?
 
-			xhrRequest(dataUrl, 'GET',
-			function(dataResponseText) {
+			xhrRequest(dataUrl, 'GET', function(dataResponseText) {
 				var json = JSON.parse(dataResponseText);
 				console.log(dataResponseText); // JSON.stringify() not necessary!
 
@@ -161,12 +158,9 @@ function getPokemon() { //(latitude, longitude) {
 					// no pokemon found!
 					Pebble.showSimpleNotificationOnPebble("No Pokemon found!", "(" + myLatitude + ", " + myLongitude + ")");
 				}
-			}
-		);
-	}
-);
-
-}
+			});
+		});
+	}	
 }
 
 
