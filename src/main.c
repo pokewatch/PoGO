@@ -1,6 +1,19 @@
 #include <pebble.h>
+#include "pokedex.h"
 
-Window *list, *compass;
+// TODO: replace crude hack with https://github.com/smallstoneapps/data-processor ;)
+#define KEY_POKEMON1ID 0
+#define KEY_POKEMON1EXPIRATIONTIME 1
+#define KEY_POKEMON1DISTANCE 2
+#define KEY_POKEMON1BEARING 3
+// . . .
+//#define KEY_POKEMON9ID 32
+//#define KEY_POKEMON9EXPIRATIONTIME 33
+//#define KEY_POKEMON9DISTANCE 34
+//#define KEY_POKEMON9BEARING 35
+#define KEY_REQUESTTYPE 36
+
+Window *splash, *list, *compass;
 MenuLayer *menu;
 Layer *overlay;
 
@@ -32,7 +45,6 @@ typedef struct {
 
 Pokemon nearby[9];
 
-static GPath *mini_compass = NULL;
 static const GPathInfo MINI_COMPASS_INFO = {
 	.num_points = 4,
 	.points = (GPoint []) { {0,-9}, {-6,9}, {0,3}, {6,9} }
@@ -81,7 +93,7 @@ void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void
 	graphics_draw_text(ctx, nearby[index->row-1].listBuffer, custom_font, GRect(64, 14, 180, 30), GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 	
 	graphics_context_set_fill_color(ctx, GColorBlack);
-	gpath_draw_filled(ctx, mini_compass);
+	gpath_draw_filled(ctx, nearby[index->row-1].compass);
 }
 
 static uint16_t get_num_pokemon(MenuLayer *menu_layer, uint16_t section_index, void *data){
@@ -114,10 +126,139 @@ void config(void *context){
 	window_single_repeating_click_subscribe(BUTTON_ID_UP, 200, up);
 }
 
+
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+
+  // call API on the 15s (for now until distance refresh implemented)
+  if (tick_time->tm_sec % 15 == 0) {
+
+  	APP_LOG(APP_LOG_LEVEL_INFO, "tick_handler() 0/15/30/45");
+
+  	// Begin dictionary
+  	DictionaryIterator *iter;
+  	app_message_outbox_begin(&iter);
+
+  	// RequestType is currently meaningless, but w/b used for e.g. "full" API call vs. distance refresh
+
+  	// Add key-value pairs
+  	dict_write_cstring(iter, KEY_REQUESTTYPE, "");
+
+  	// Send the message!
+  	app_message_outbox_send();
+
+  }
+}
+
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+
+  APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
+
+  time_t now = time(NULL);
+  time_t expiration = now;
+  long int expiration_delta;
+  int distance = 0;
+  int bearing = 0;
+
+  // TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
+  for(int i = 0; i < 9; i++){
+
+  	// Read tuples
+  	Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMON1ID + (i * 4));
+  	if(pokemon_id_tuple) {
+  	  nearby[i].dex = pokemon_id_tuple->value->int32;
+  	}
+
+  	// break on first 0 ID - indicates end of data
+  	if (nearby[i].dex == 0) {
+  		break;
+  	}
+
+  	Tuple *pokemon_expiration_tuple = dict_find(iterator, KEY_POKEMON1EXPIRATIONTIME + (i * 4));
+  	if(pokemon_expiration_tuple) {
+      expiration = pokemon_expiration_tuple->value->int32;
+  	}
+
+  	expiration_delta = expiration - now;
+
+  	Tuple *pokemon_distance_tuple = dict_find(iterator, KEY_POKEMON1DISTANCE + (i * 4));
+  	if(pokemon_distance_tuple) {
+  	  distance = pokemon_distance_tuple->value->int32;
+  	}
+
+  	Tuple *pokemon_bearing_tuple = dict_find(iterator, KEY_POKEMON1BEARING + (i * 4));
+  	if(pokemon_bearing_tuple) {
+  	  bearing = pokemon_bearing_tuple->value->int32;
+  	}
+  	APP_LOG(APP_LOG_LEVEL_DEBUG, "bearing: %d", bearing);
+
+  	// TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
+
+  	// TODO: refactor ASAP!
+  	NUM_POKEMON = i + 1;
+
+
+  	// need to destroy old bitmap first
+  	gbitmap_destroy(nearby[i].sprite);
+
+  	// TODO: recycle instead, since it will realistically be just a few pokemon based on data so far
+  	// TODO: and do a better job of clean-up in general...?
+
+  	nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
+  	//strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
+  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[i].dex], 
+  	  (int) expiration_delta / 60, (int) expiration_delta % 60, distance); 
+
+  	nearby[i].angle = bearing * TRIG_MAX_ANGLE / 360;
+  	APP_LOG(APP_LOG_LEVEL_DEBUG, "nearby[i].angle: %d", nearby[i].angle);
+
+  	// draw compass
+  	nearby[i].compass = gpath_create(&MINI_COMPASS_INFO);
+  	gpath_move_to(nearby[i].compass, GPoint(124, 40));
+  	//nearby[i].angle = TRIG_MAX_ANGLE/(12*i);
+  	gpath_rotate_to(nearby[i].compass, nearby[i].angle);
+
+  }
+  
+  menu_layer_reload_data(menu);
+
+}
+
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
+
+void compass_handler(CompassHeadingData heading){
+	for(int i = 0; i < NUM_POKEMON; i++){
+		gpath_rotate_to(nearby[i].compass, heading.true_heading + nearby[i].angle);
+	}
+	layer_mark_dirty(window_get_root_layer(list));
+}
+
+
 void init(){
+
+	// Register callbacks
+	app_message_register_inbox_received(inbox_received_callback);
+	app_message_register_inbox_dropped(inbox_dropped_callback);
+	app_message_register_outbox_failed(outbox_failed_callback);
+	app_message_register_outbox_sent(outbox_sent_callback);
+
+	// Open AppMessage
+	// TODO: sizes?
 	app_message_open(2048,2048);
-	//app_message_register_inbox_received(inbox);
-	
+
+  	tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+
+
 	custom_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PKMN_10));
 	
 	top = gbitmap_create_with_resource(RESOURCE_ID_UI_TOP);
@@ -154,21 +295,18 @@ void init(){
 	
 	layer_add_child(window_get_root_layer(list), menu_layer_get_layer(menu));
 	
-	mini_compass = gpath_create(&MINI_COMPASS_INFO);
-	gpath_move_to(mini_compass, GPoint(124, 40));
-	gpath_rotate_to(mini_compass, TRIG_MAX_ANGLE/12);
-	
 	overlay = layer_create(layer_get_bounds(window_get_root_layer(list)));
 	layer_set_update_proc(overlay, temp_draw);
 	
 	layer_add_child(window_get_root_layer(list), overlay);
-	
+
+/*
 	//DUMMY DATA
 	NUM_POKEMON = 5;
 
 	nearby[0].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke25);
 	strncpy(nearby[0].listBuffer, "Pikachu\n\n12 m", sizeof(nearby[0].listBuffer));
-
+	
 	nearby[1].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke83);
 	strncpy(nearby[1].listBuffer, "Farfetchd\n\n53 m", sizeof(nearby[1].listBuffer));
 	
@@ -180,6 +318,14 @@ void init(){
 	
 	nearby[4].sprite = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_poke138);
 	strncpy(nearby[4].listBuffer, "Omanyte\n\n163 m", sizeof(nearby[4].listBuffer));
+*/
+	// crude loading message
+	NUM_POKEMON = 1;
+
+	nearby[0].sprite = gbitmap_create_with_resource(poke_images[0]);
+	strncpy(nearby[0].listBuffer, "Loading...", sizeof(nearby[0].listBuffer));
+	
+	compass_service_subscribe(compass_handler);
 	
 	menu_layer_reload_data(menu);
 	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);

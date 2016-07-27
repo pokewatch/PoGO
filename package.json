@@ -1,5 +1,5 @@
 {
-    "author": "Mathew Reiss",
+    "author": "Mathew Reiss, ishotjr, pebbledev #pokemon",
     "dependencies": {},
     "keywords": [],
     "name": "pok-mon-go-radar",
@@ -10,13 +10,6 @@
         ],
         "displayName": "Pok\u00e9mon GO Radar",
         "enableMultiJS": true,
-        "messageKeys": [
-            "NumPokemon",
-            "PokedexData[9]",
-            "DistanceData[9]",
-            "AngleData[9]",
-            "Team"
-        ],
         "projectType": "native",
         "resources": {
             "media": [
@@ -824,6 +817,45 @@
         "uuid": "6532f36c-e853-432c-8784-2e9f5c042cfc",
         "watchapp": {
             "watchface": false
+        },
+        "messageKeys": {
+          "Pokemon1Id": 0,
+          "Pokemon1ExpirationTime": 1,
+          "Pokemon1Distance": 2,
+          "Pokemon1Bearing": 3,
+          "Pokemon2Id": 4,
+          "Pokemon2ExpirationTime": 5,
+          "Pokemon2Distance": 6,
+          "Pokemon2Bearing": 7,
+          "Pokemon3Id": 8,
+          "Pokemon3ExpirationTime": 9,
+          "Pokemon3Distance": 10,
+          "Pokemon3Bearing": 11,
+          "Pokemon4Id": 12,
+          "Pokemon4ExpirationTime": 13,
+          "Pokemon4Distance": 14,
+          "Pokemon4Bearing": 15,
+          "Pokemon5Id": 16,
+          "Pokemon5ExpirationTime": 17,
+          "Pokemon5Distance": 18,
+          "Pokemon5Bearing": 19,
+          "Pokemon6Id": 20,
+          "Pokemon6ExpirationTime": 21,
+          "Pokemon6Distance": 22,
+          "Pokemon6Bearing": 23,
+          "Pokemon7Id": 24,
+          "Pokemon7ExpirationTime": 25,
+          "Pokemon7Distance": 26,
+          "Pokemon7Bearing": 27,
+          "Pokemon8Id": 28,
+          "Pokemon8ExpirationTime": 29,
+          "Pokemon8Distance": 30,
+          "Pokemon8Bearing": 31,
+          "Pokemon9Id": 32,
+          "Pokemon9ExpirationTime": 33,
+          "Pokemon9Distance": 34,
+          "Pokemon9Bearing": 35,
+          "RequestType": 36
         }
     },
     "version": "0.1.0"
