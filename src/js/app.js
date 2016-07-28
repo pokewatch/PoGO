@@ -99,6 +99,8 @@ function getPokemon() { //(latitude, longitude) {
 							"i": i,
 							"pokemonId": pokemonId,
 							"pokemonExpirationTime": pokemonExpirationTime,
+							"pokemonLatitude": pokemonLatitude,
+							"pokemonLongitude": pokemonLongitude,
 							"pokemonDistance": pokemonDistance,
 							"pokemonBearing": pokemonBearing,
 							"pokemonUID": pokemonUID
@@ -117,8 +119,16 @@ function getPokemon() { //(latitude, longitude) {
 					//get rid of duplicates that have the same UID
 					for( var i=0; i<allNearbyPokemon.length-1; i++ ) {
 						for (var j=i; j<allNearbyPokemon.length-1; j++) {
-							if (allNearbyPokemon[i].pokemonUID == allNearbyPokemon[j].pokemonUID) {
-								console.log("Removed duplicate pokemon with UID " + allNearbyPokemon[i].pokemonUID);
+							// turns out unique IDs...aren't at all unique?!
+							//if (allNearbyPokemon[i].pokemonUID == allNearbyPokemon[j].pokemonUID) {
+							if ((allNearbyPokemon[i].pokemonId == allNearbyPokemon[j].pokemonId) && 
+								(allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[j].pokemonLatitude) && 
+								(allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[j].pokemonLongitude)) {
+								//console.log("Removed duplicate pokemon with UID " + allNearbyPokemon[i].pokemonUID);
+								console.log("Removed duplicate pokemon " + allNearbyPokemon[j].i + 
+									" with pokemonId: " + allNearbyPokemon[j].pokemonId +
+									" pokemonLatitude: " + allNearbyPokemon[j].pokemonLatitude + 
+									" pokemonLongitude" + allNearbyPokemon[j].pokemonLongitude);
 								allNearbyPokemon.splice(i, 1);
 							}
 						}
