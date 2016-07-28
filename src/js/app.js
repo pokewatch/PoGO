@@ -44,7 +44,10 @@ function getPokemon() { //(latitude, longitude) {
 		xhrRequest(scanUrl, 'GET', function(scanResponseText) {
 			if (scanResponseText.indexOf("maintenance") > -1) {
 				console.log("Down for maintenance");
-				MessageQueue.sendAppMessage({"status": 0}, messageSuccessHandler, messageFailureHandler);
+
+				// TODO: something better vs. continual pop-ups! 
+				Pebble.showSimpleNotificationOnPebble("Server error!", "The server is currently down for maintenance");
+
 			}
 
 			var scanJson = JSON.parse(scanResponseText);
