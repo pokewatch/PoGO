@@ -45,8 +45,8 @@ function getPokemon() { //(latitude, longitude) {
 			if (scanResponseText.indexOf("maintenance") > -1) {
 				console.log("Down for maintenance");
 
-				// TODO: something better vs. continual pop-ups! 
-				Pebble.showSimpleNotificationOnPebble("Server error!", "The server is currently down for maintenance");
+				// TODO: something better vs. continual pop-ups!
+				MessageQueue.sendAppMessage({"DisplayMessage": "Servers are down for maintenance"});
 
 			}
 
@@ -121,13 +121,13 @@ function getPokemon() { //(latitude, longitude) {
 						for (var j=i; j<allNearbyPokemon.length-1; j++) {
 							// turns out unique IDs...aren't at all unique?!
 							//if (allNearbyPokemon[i].pokemonUID == allNearbyPokemon[j].pokemonUID) {
-							if ((allNearbyPokemon[i].pokemonId == allNearbyPokemon[j].pokemonId) && 
-								(allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[j].pokemonLatitude) && 
+							if ((allNearbyPokemon[i].pokemonId == allNearbyPokemon[j].pokemonId) &&
+								(allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[j].pokemonLatitude) &&
 								(allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[j].pokemonLongitude)) {
 								//console.log("Removed duplicate pokemon with UID " + allNearbyPokemon[i].pokemonUID);
-								console.log("Removed duplicate pokemon " + allNearbyPokemon[j].i + 
+								console.log("Removed duplicate pokemon " + allNearbyPokemon[j].i +
 									" with pokemonId: " + allNearbyPokemon[j].pokemonId +
-									" pokemonLatitude: " + allNearbyPokemon[j].pokemonLatitude + 
+									" pokemonLatitude: " + allNearbyPokemon[j].pokemonLatitude +
 									" pokemonLongitude" + allNearbyPokemon[j].pokemonLongitude);
 								allNearbyPokemon.splice(i, 1);
 							}
@@ -169,11 +169,11 @@ function getPokemon() { //(latitude, longitude) {
 					);
 				} else {
 					// no pokemon found!
-					Pebble.showSimpleNotificationOnPebble("No Pokemon found!", "(" + myLatitude + ", " + myLongitude + ")");
+					MessageQueue.sendAppMessage({"DisplayMessage": "No Pokemon are nearby"});
 				}
 			});
 		});
-	}	
+	}
 }
 
 
@@ -312,7 +312,7 @@ function getLocation(){
 						myLongitude = pos.coords.longitude;
 					},
 					function(pos){ //Fail - Low Acc
-						Pebble.showSimpleNotificationOnPebble("GPS Error", "Unable to detect location - please check your phone to ensure GPS is enabled.");
+						MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
 					},
 					{
 						maximumAge:600000,
@@ -328,6 +328,6 @@ function getLocation(){
 			);
 		}
 		else{
-			Pebble.showSimpleNotificationOnPebble("GPS Disabled", "Unable to detect location - please check your phone to ensure GPS is enabled.");
+			MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
 		}
 	}

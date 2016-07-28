@@ -804,6 +804,11 @@
                     "targetPlatforms": null,
                     "trackingAdjust": -1,
                     "type": "font"
+                },
+                {
+                    "file": "images/alertBackground.png",
+                    "name": "ALERT_BACKGROUND",
+                    "type": "bitmap"
                 }
             ]
         },
@@ -854,7 +859,8 @@
           "Pokemon9ExpirationTime": 33,
           "Pokemon9Distance": 34,
           "Pokemon9Bearing": 35,
-          "RequestType": 36
+          "RequestType": 36,
+          "DisplayMessage" : 37
         }
     },
     "version": "0.4.0"
