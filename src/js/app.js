@@ -69,7 +69,7 @@ function getPokemon() { //(latitude, longitude) {
 					var allNearbyPokemon = [];
 
 					var i;
-					for (i = 0; i < json.pokemon.length - 1; i++) {
+					for (i = 0; i < json.pokemon.length; i++) {
 
 						// TODO: should still actually verify vs. using blindly!
 						console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
@@ -117,21 +117,12 @@ function getPokemon() { //(latitude, longitude) {
 					});
 
 					//get rid of duplicates that have the same UID
-					for( var i=0; i<allNearbyPokemon.length-1; i++ ) {
-						for (var j=i; j<allNearbyPokemon.length-1; j++) {
-							// turns out unique IDs...aren't at all unique?!
-							//if (allNearbyPokemon[i].pokemonUID == allNearbyPokemon[j].pokemonUID) {
-							if ((allNearbyPokemon[i].pokemonId == allNearbyPokemon[j].pokemonId) &&
-								(allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[j].pokemonLatitude) &&
-								(allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[j].pokemonLongitude)) {
-								//console.log("Removed duplicate pokemon with UID " + allNearbyPokemon[i].pokemonUID);
-								console.log("Removed duplicate pokemon " + allNearbyPokemon[j].i +
-									" with pokemonId: " + allNearbyPokemon[j].pokemonId +
-									" pokemonLatitude: " + allNearbyPokemon[j].pokemonLatitude +
-									" pokemonLongitude" + allNearbyPokemon[j].pokemonLongitude);
-								allNearbyPokemon.splice(i, 1);
-							}
-						}
+					for(var i=0; i<allNearbyPokemon.length-1; i++ ) {
+					  if (allNearbyPokemon[i+1] != undefined && allNearbyPokemon[i].pokemonId == allNearbyPokemon[i+1].pokemonId && allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[i+1].pokemonLatitude  && allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[i+1].pokemonLongitude) {
+					    console.log("removed pokemon at index " + i)
+					    delete allNearbyPokemon[i];
+					    //allNearbyPokemon.splice(i, 1);
+					  }
 					}
 
 					allNearbyPokemon = allNearbyPokemon.filter( function( el ){ return (typeof el !== "undefined"); } );
@@ -143,7 +134,7 @@ function getPokemon() { //(latitude, longitude) {
 					var j;
 					for (j = 0; j < 9; j++) {
 
-						if (j < allNearbyPokemon.length - 1) {
+						if (j < allNearbyPokemon.length) {
 							dictionary["Pokemon" + (j + 1) + "Id"] = allNearbyPokemon[j].pokemonId;
 							dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = allNearbyPokemon[j].pokemonExpirationTime;
 							dictionary["Pokemon" + (j + 1) + "Distance"] = allNearbyPokemon[j].pokemonDistance;
@@ -312,7 +303,8 @@ function getLocation(){
 						myLongitude = pos.coords.longitude;
 					},
 					function(pos){ //Fail - Low Acc
-						MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
+						//this keeps being sent over and over so i'm commenting it out for now
+						//MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
 					},
 					{
 						maximumAge:600000,
@@ -328,6 +320,7 @@ function getLocation(){
 			);
 		}
 		else{
-			MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
+			//this keeps being sent over and over so i'm commenting it out for now
+			//MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
 		}
 	}
