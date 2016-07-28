@@ -5,8 +5,7 @@
     "name": "pok-mon-go-radar",
     "pebble": {
         "capabilities": [
-            "location",
-            "configurable"
+            "location"
         ],
         "displayName": "Pok\u00e9mon GO Radar",
         "enableMultiJS": true,
