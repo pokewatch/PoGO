@@ -45,7 +45,7 @@ function getPokemon() { //(latitude, longitude) {
 			if (scanResponseText.indexOf("maintenance") > -1) {
 				console.log("Down for maintenance");
 
-				// TODO: something better vs. continual pop-ups! 
+				// TODO: something better vs. continual pop-ups!
 				Pebble.showSimpleNotificationOnPebble("Server error!", "The server is currently down for maintenance");
 
 			}
@@ -118,19 +118,8 @@ function getPokemon() { //(latitude, longitude) {
 
 					//get rid of duplicates that have the same UID
 					for( var i=0; i<allNearbyPokemon.length-1; i++ ) {
-						for (var j=i; j<allNearbyPokemon.length-1; j++) {
-							// turns out unique IDs...aren't at all unique?!
-							//if (allNearbyPokemon[i].pokemonUID == allNearbyPokemon[j].pokemonUID) {
-							if ((allNearbyPokemon[i].pokemonId == allNearbyPokemon[j].pokemonId) && 
-								(allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[j].pokemonLatitude) && 
-								(allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[j].pokemonLongitude)) {
-								//console.log("Removed duplicate pokemon with UID " + allNearbyPokemon[i].pokemonUID);
-								console.log("Removed duplicate pokemon " + allNearbyPokemon[j].i + 
-									" with pokemonId: " + allNearbyPokemon[j].pokemonId +
-									" pokemonLatitude: " + allNearbyPokemon[j].pokemonLatitude + 
-									" pokemonLongitude" + allNearbyPokemon[j].pokemonLongitude);
-								allNearbyPokemon.splice(i, 1);
-							}
+						if (allNearbyPokemon[i+1] && allNearbyPokemon[i].uid == allNearbyPokemon[i+1].uid && allNearbyPokemon[i].latitude == allNearbyPokemon[i+1].latitude && allNearbyPokemon[i].longitude == allNearbyPokemon[i+1].longitude) {
+							delete allNearbyPokemon[i];
 						}
 					}
 
@@ -173,7 +162,7 @@ function getPokemon() { //(latitude, longitude) {
 				}
 			});
 		});
-	}	
+	}
 }
 
 
