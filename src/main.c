@@ -176,6 +176,27 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
 }
 
+void displayToast(char *string) {
+		GRect from_frame =  GRect(PBL_IF_ROUND_ELSE(40, 22), 180, 100, 100);
+		GRect to_frame = GRect(PBL_IF_ROUND_ELSE(40, 22), 34, 100, 100);
+
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status: %s", string);
+		text_layer_set_text(alertText, string);
+
+		vibes_double_pulse();
+
+		animate_layer(alert, &from_frame, &to_frame, 1000, 0);
+		animate_layer(alert, &to_frame, &from_frame, 1000, 3000);
+}
+
+static void bluetooth_callback(bool connected) {
+	if(connected) {
+		displayToast("Bluetooth reconnected");
+	} else {
+		displayToast("Bluetooth disconnected");
+	}
+}
+
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
 
   APP_LOG(APP_LOG_LEVEL_INFO, "Message received!");
@@ -190,17 +211,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *tuple;
   tuple = dict_find(iterator, KEY_DISPLAYMESSAGE);
   if(tuple) {
-   if(tuple->value->cstring) {
-    	GRect from_frame =  GRect(22, 168, 100, 100);
-   	  GRect to_frame = GRect(22, 34, 100, 100);
-
-   	      APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status: %s", tuple->value->cstring);
-   	      text_layer_set_text(alertText, tuple->value->cstring);
-
-
-   	      animate_layer(alert, &from_frame, &to_frame, 1000, 0);
-   	      animate_layer(alert, &to_frame, &from_frame, 1000, 2000);
-   }
+  	if(tuple->value->cstring) {
+		displayToast(tuple->value->cstring);
+   	}
   } else {
 
 	  // TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
@@ -302,6 +315,10 @@ void init(){
 
   	tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
 
+	connection_service_subscribe((ConnectionHandlers) {
+  	.pebble_app_connection_handler = bluetooth_callback
+	});
+
 
 	custom_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_PKMN_10));
 
@@ -382,7 +399,7 @@ void init(){
 	menu_layer_reload_data(menu);
 	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
 
-	alert = layer_create(GRect(34, 200, 100, 100));
+	alert = layer_create(GRect(PBL_IF_ROUND_ELSE(40, 34), 200, 100, 100));
 
 	alertText = text_layer_create(GRect(0, 0, 100, 100));
   	text_layer_set_text(alertText, "");
