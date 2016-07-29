@@ -20,6 +20,9 @@ var xhrRequest = function (url, type, callback) {
 
 function getPokemon() { //(latitude, longitude) {
 
+	//uncomment this to test toasts hehe "test toast"
+	//MessageQueue.sendAppMessage({"DisplayMessage": "Test Toast"});
+
 	// quick lame hack: myLatitude, myLongitude may not yet be set - just skip for now...
 	if (isNaN(myLatitude) || isNaN(myLongitude)) {
 
