@@ -12,11 +12,19 @@
 //#define KEY_POKEMON9DISTANCE 34
 //#define KEY_POKEMON9BEARING 35
 #define KEY_REQUESTTYPE 36
+#define KEY_DISPLAYMESSAGE 37
 
 Window *splash, *list, *compass;
 MenuLayer *menu;
 StatusBarLayer *status_bar;
 Layer *overlay;
+
+Layer *alert;
+TextLayer *alertText;
+
+//alert layer
+BitmapLayer *alertBackgroundLayer;
+GBitmap *alertBackground;
 
 //GBitmap *nearby[9];
 GBitmap *top, *bottom;
@@ -68,6 +76,24 @@ void temp_draw(Layer *layer, GContext *ctx){
 
 	graphics_context_set_text_color(ctx, GColorWhite);
 	graphics_draw_text(ctx, "12:34", fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(0,PBL_IF_RECT_ELSE(-2,2),PBL_IF_RECT_ELSE(144,180),16), GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+}
+
+void stopped(Animation *anim, bool finished, void *context){
+    property_animation_destroy((PropertyAnimation*) anim);
+}
+
+void animate_layer(Layer *layer, GRect *start, GRect *finish, int duration, int delay){
+    PropertyAnimation *anim = property_animation_create_layer_frame(layer, start, finish);
+
+    animation_set_duration((Animation*) anim, duration);
+    animation_set_delay((Animation*) anim, delay);
+
+    AnimationHandlers handlers = {
+        .stopped = (AnimationStoppedHandler) stopped
+    };
+    animation_set_handlers((Animation*) anim, handlers, NULL);
+
+    animation_schedule((Animation*) anim);
 }
 
 void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void *data){
@@ -160,68 +186,85 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   int distance = 0;
   int bearing = 0;
 
-  // TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
-  for(int i = 0; i < 9; i++){
 
-  	// Read tuples
-  	Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMON1ID + (i * 4));
-  	if(pokemon_id_tuple) {
-  	  nearby[i].dex = pokemon_id_tuple->value->int32;
-  	}
+  Tuple *tuple;
+  tuple = dict_find(iterator, KEY_DISPLAYMESSAGE);
+  if(tuple) {
+   if(tuple->value->cstring) {
+    	GRect from_frame =  GRect(22, 168, 100, 100);
+   	  GRect to_frame = GRect(22, 34, 100, 100);
 
-  	// break on first 0 ID - indicates end of data
-  	if (nearby[i].dex == 0) {
-  		break;
-  	}
-
-  	Tuple *pokemon_expiration_tuple = dict_find(iterator, KEY_POKEMON1EXPIRATIONTIME + (i * 4));
-  	if(pokemon_expiration_tuple) {
-      expiration = pokemon_expiration_tuple->value->int32;
-  	}
-
-  	expiration_delta = expiration - now;
-
-  	Tuple *pokemon_distance_tuple = dict_find(iterator, KEY_POKEMON1DISTANCE + (i * 4));
-  	if(pokemon_distance_tuple) {
-  	  distance = pokemon_distance_tuple->value->int32;
-  	}
-
-  	Tuple *pokemon_bearing_tuple = dict_find(iterator, KEY_POKEMON1BEARING + (i * 4));
-  	if(pokemon_bearing_tuple) {
-  	  bearing = pokemon_bearing_tuple->value->int32;
-  	}
-  	APP_LOG(APP_LOG_LEVEL_DEBUG, "bearing: %d", bearing);
-
-  	// TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
-
-  	// TODO: refactor ASAP!
-  	NUM_POKEMON = i + 1;
+   	      APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status: %s", tuple->value->cstring);
+   	      text_layer_set_text(alertText, tuple->value->cstring);
 
 
-  	// need to destroy old bitmap first
-  	gbitmap_destroy(nearby[i].sprite);
+   	      animate_layer(alert, &from_frame, &to_frame, 1000, 0);
+   	      animate_layer(alert, &to_frame, &from_frame, 1000, 2000);
+   }
+  } else {
 
-  	// TODO: recycle instead, since it will realistically be just a few pokemon based on data so far
-  	// TODO: and do a better job of clean-up in general...?
+	  // TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
+	  for(int i = 0; i < 9; i++){
 
-  	nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
-  	//strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
-  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[i].dex],
-  	  (int) expiration_delta / 60, (int) expiration_delta % 60, distance);
+	  	// Read tuples
+	  	Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMON1ID + (i * 4));
+	  	if(pokemon_id_tuple) {
+	  	  nearby[i].dex = pokemon_id_tuple->value->int32;
+	  	}
 
-  	nearby[i].angle = bearing * TRIG_MAX_ANGLE / 360;
-  	APP_LOG(APP_LOG_LEVEL_DEBUG, "nearby[i].angle: %d", nearby[i].angle);
+	  	// break on first 0 ID - indicates end of data
+	  	if (nearby[i].dex == 0) {
+	  		break;
+	  	}
 
-  	// draw compass
-  	nearby[i].compass = gpath_create(&MINI_COMPASS_INFO);
-  	gpath_move_to(nearby[i].compass, GPoint(124, 40));
-  	//nearby[i].angle = TRIG_MAX_ANGLE/(12*i);
-  	gpath_rotate_to(nearby[i].compass, nearby[i].angle);
+	  	Tuple *pokemon_expiration_tuple = dict_find(iterator, KEY_POKEMON1EXPIRATIONTIME + (i * 4));
+	  	if(pokemon_expiration_tuple) {
+	      expiration = pokemon_expiration_tuple->value->int32;
+	  	}
 
-  }
+	  	expiration_delta = expiration - now;
 
-  menu_layer_reload_data(menu);
+	  	Tuple *pokemon_distance_tuple = dict_find(iterator, KEY_POKEMON1DISTANCE + (i * 4));
+	  	if(pokemon_distance_tuple) {
+	  	  distance = pokemon_distance_tuple->value->int32;
+	  	}
 
+	  	Tuple *pokemon_bearing_tuple = dict_find(iterator, KEY_POKEMON1BEARING + (i * 4));
+	  	if(pokemon_bearing_tuple) {
+	  	  bearing = pokemon_bearing_tuple->value->int32;
+	  	}
+	  	APP_LOG(APP_LOG_LEVEL_DEBUG, "bearing: %d", bearing);
+
+	  	// TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
+
+	  	// TODO: refactor ASAP!
+	  	NUM_POKEMON = i + 1;
+
+
+	  	// need to destroy old bitmap first
+	  	gbitmap_destroy(nearby[i].sprite);
+
+	  	// TODO: recycle instead, since it will realistically be just a few pokemon based on data so far
+	  	// TODO: and do a better job of clean-up in general...?
+
+	  	nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
+	  	//strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
+	  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[i].dex],
+	  	  (int) expiration_delta / 60, (int) expiration_delta % 60, distance);
+
+	  	nearby[i].angle = bearing * TRIG_MAX_ANGLE / 360;
+	  	APP_LOG(APP_LOG_LEVEL_DEBUG, "nearby[i].angle: %d", nearby[i].angle);
+
+	  	// draw compass
+	  	nearby[i].compass = gpath_create(&MINI_COMPASS_INFO);
+	  	gpath_move_to(nearby[i].compass, GPoint(124, 40));
+	  	//nearby[i].angle = TRIG_MAX_ANGLE/(12*i);
+	  	gpath_rotate_to(nearby[i].compass, nearby[i].angle);
+
+	  }
+
+	  menu_layer_reload_data(menu);
+	}
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -339,7 +382,20 @@ void init(){
 	menu_layer_reload_data(menu);
 	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
 
+	alert = layer_create(GRect(34, 200, 100, 100));
 
+	alertText = text_layer_create(GRect(0, 0, 100, 100));
+  	text_layer_set_text(alertText, "");
+  	text_layer_set_text_alignment(alertText, GTextAlignmentCenter);
+  	layer_add_child(alert, text_layer_get_layer(alertText));
+
+	alertBackgroundLayer = bitmap_layer_create(GRect(0, 0, 100, 100));
+	bitmap_layer_set_compositing_mode(alertBackgroundLayer, GCompOpSet);
+    alertBackground = gbitmap_create_with_resource(RESOURCE_ID_ALERT_BACKGROUND);
+    bitmap_layer_set_bitmap(alertBackgroundLayer, alertBackground);
+    layer_add_child(alert, bitmap_layer_get_layer(alertBackgroundLayer));
+
+	layer_add_child(overlay, alert);
 
 	window_stack_push(list, true);
 
