@@ -5,6 +5,7 @@ var myLatitude, myLongitude;
 //var pkmnLatitude, pkmnLongitude;
 
 //var distance, bearing;
+var gpsErrorReported = false;
 
 var MessageQueue = require("./MessageQueue");
 
@@ -295,16 +296,21 @@ function getLocation(){
 			function(pos){ //Success - High Acc
 				myLatitude = pos.coords.latitude;
 				myLongitude = pos.coords.longitude;
+				gpsErrorReported = false;
 			},
 			function(pos){ //Fail - High Acc
 				navigator.geolocation.watchPosition(
 					function(pos){ //Success - Low Acc
 						myLatitude = pos.coords.latitude;
 						myLongitude = pos.coords.longitude;
+						gpsErrorReported = false;
 					},
 					function(pos){ //Fail - Low Acc
-						//this keeps being sent over and over so i'm commenting it out for now
-						//MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
+						// only alert once!
+						if(!gpsErrorReported) {
+							MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
+							gpsErrorReported = true;
+						}
 					},
 					{
 						maximumAge:600000,
@@ -320,7 +326,10 @@ function getLocation(){
 			);
 		}
 		else{
-			//this keeps being sent over and over so i'm commenting it out for now
-			//MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
+			// only alert once!
+			if(!gpsErrorReported) {
+				MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
+				gpsErrorReported = true;
+			}
 		}
 	}
