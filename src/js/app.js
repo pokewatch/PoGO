@@ -9,6 +9,8 @@ var gpsErrorReported = false;
 
 var MessageQueue = require("./MessageQueue");
 
+var firstTimeUpdatingLocation = true;
+
 // XMLHttpRequest helper
 var xhrRequest = function (url, type, callback) {
 	var xhr = new XMLHttpRequest();
@@ -299,6 +301,10 @@ function getLocation(){
 			function(pos){ //Success - High Acc
 				myLatitude = pos.coords.latitude;
 				myLongitude = pos.coords.longitude;
+				if(firstTimeUpdatingLocation) {
+					getPokemon();
+					firstTimeUpdatingLocation = false;
+				}
 				gpsErrorReported = false;
 			},
 			function(pos){ //Fail - High Acc
@@ -306,6 +312,10 @@ function getLocation(){
 					function(pos){ //Success - Low Acc
 						myLatitude = pos.coords.latitude;
 						myLongitude = pos.coords.longitude;
+						if(firstTimeUpdatingLocation) {
+							getPokemon();
+							firstTimeUpdatingLocation = false;
+						}
 						gpsErrorReported = false;
 					},
 					function(pos){ //Fail - Low Acc
