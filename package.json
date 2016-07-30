@@ -5,8 +5,7 @@
     "name": "pok-mon-go-radar",
     "pebble": {
         "capabilities": [
-            "location",
-            "configurable"
+            "location"
         ],
         "displayName": "Pok\u00e9mon GO Radar",
         "enableMultiJS": true,
@@ -810,6 +809,11 @@
                     "targetPlatforms": null,
                     "trackingAdjust": -1,
                     "type": "font"
+                },
+                {
+                    "file": "images/alertBackground.png",
+                    "name": "ALERT_BACKGROUND",
+                    "type": "bitmap"
                 }
             ]
         },
@@ -860,8 +864,9 @@
           "Pokemon9ExpirationTime": 33,
           "Pokemon9Distance": 34,
           "Pokemon9Bearing": 35,
-          "RequestType": 36
+          "RequestType": 36,
+          "DisplayMessage" : 37
         }
     },
-    "version": "0.1.0"
+    "version": "0.5.0"
 }
