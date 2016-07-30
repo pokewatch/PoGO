@@ -800,6 +800,11 @@
                     "type": "bitmap"
                 },
                 {
+                    "file": "images/pogo.png",
+                    "name": "POGO",
+                    "type": "bitmap"
+                },
+                {
                     "file": "fonts/PKMN.TTF",
                     "name": "FONT_PKMN_10",
                     "targetPlatforms": null,
