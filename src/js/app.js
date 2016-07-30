@@ -2,6 +2,7 @@
 
 
 var myLatitude, myLongitude;
+var hasBeenNotified = false;
 //var pkmnLatitude, pkmnLongitude;
 
 //var distance, bearing;
@@ -280,6 +281,13 @@ function convert_units(old_distance) {
 Pebble.addEventListener("ready", function(e){
 
 	console.log('PebbleKit JS ready!');
+
+    if(localStorage.notified === "yes") hasBeenNotified = true;
+    
+    if(!hasBeenNotified){
+        Pebble.showSimpleNotificationOnPebble("Message from Prof. Willow", "Thanks for downloading the Pokemon GO Radar app for Pebble! You may need to rotate your wrist a few times to calibrate the compass. And, as always, remember to stay alert! Have fun!!!");
+        localStorage.notified = "yes";
+    }
 
 	getLocation();
 	getPokemon();

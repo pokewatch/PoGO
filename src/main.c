@@ -19,6 +19,9 @@ MenuLayer *menu;
 StatusBarLayer *status_bar;
 Layer *overlay;
 
+GBitmap *splash_bitmap;
+BitmapLayer *bitmap_layer;
+TextLayer *loading_layer;
 Layer *alert;
 TextLayer *alertText;
 
@@ -39,6 +42,8 @@ int NUM_POKEMON = 0;
 #define MYSTIC 1
 #define INSTINCT 2
 int TEAM = 1;
+
+bool loading = true;
 
 GFont custom_font;
 
@@ -104,7 +109,7 @@ void draw_pokemon(GContext *ctx, const Layer *cell_layer, MenuIndex *index, void
 	}
 
 	if(menu_cell_layer_is_highlighted(cell_layer)){
-		graphics_context_set_fill_color(ctx, GColorLightGray);
+		graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray,GColorWhite));
 		graphics_fill_rect(ctx, layer_get_bounds(cell_layer), 0, GCornerNone);
 		#ifndef PBL_COLOR
 		graphics_context_set_stroke_color(ctx, GColorBlack);
@@ -148,9 +153,14 @@ void up(ClickRecognizerRef ref, void *context){
 	}
 }
 
+void back(ClickRecognizerRef ref, void *context) {
+    window_stack_pop_all(false);
+}
+
 void config(void *context){
 	window_single_repeating_click_subscribe(BUTTON_ID_DOWN, 200, down);
 	window_single_repeating_click_subscribe(BUTTON_ID_UP, 200, up);
+	window_single_click_subscribe(BUTTON_ID_BACK, back);
 }
 
 
@@ -216,68 +226,76 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
    	}
   } else {
 
-	  // TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
-	  for(int i = 0; i < 9; i++){
+	// TODO: use https://github.com/smallstoneapps/data-processor instead of this quick crude hack!
+	for(int i = 0; i < 9; i++){
 
-	  	// Read tuples
-	  	Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMON1ID + (i * 4));
-	  	if(pokemon_id_tuple) {
-	  	  nearby[i].dex = pokemon_id_tuple->value->int32;
-	  	}
-
-	  	// break on first 0 ID - indicates end of data
-	  	if (nearby[i].dex == 0) {
-	  		break;
-	  	}
-
-	  	Tuple *pokemon_expiration_tuple = dict_find(iterator, KEY_POKEMON1EXPIRATIONTIME + (i * 4));
-	  	if(pokemon_expiration_tuple) {
-	      expiration = pokemon_expiration_tuple->value->int32;
-	  	}
-
-	  	expiration_delta = expiration - now;
-
-	  	Tuple *pokemon_distance_tuple = dict_find(iterator, KEY_POKEMON1DISTANCE + (i * 4));
-	  	if(pokemon_distance_tuple) {
-	  	  distance = pokemon_distance_tuple->value->int32;
-	  	}
-
-	  	Tuple *pokemon_bearing_tuple = dict_find(iterator, KEY_POKEMON1BEARING + (i * 4));
-	  	if(pokemon_bearing_tuple) {
-	  	  bearing = pokemon_bearing_tuple->value->int32;
-	  	}
-	  	APP_LOG(APP_LOG_LEVEL_DEBUG, "bearing: %d", bearing);
-
-	  	// TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
-
-	  	// TODO: refactor ASAP!
-	  	NUM_POKEMON = i + 1;
-
-
-	  	// need to destroy old bitmap first
-	  	gbitmap_destroy(nearby[i].sprite);
-
-	  	// TODO: recycle instead, since it will realistically be just a few pokemon based on data so far
-	  	// TODO: and do a better job of clean-up in general...?
-
-	  	nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
-	  	//strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
-	  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n(%d:%02d)\n%dm", poke_names[nearby[i].dex],
-	  	  (int) expiration_delta / 60, (int) expiration_delta % 60, distance);
-
-	  	nearby[i].angle = bearing * TRIG_MAX_ANGLE / 360;
-	  	APP_LOG(APP_LOG_LEVEL_DEBUG, "nearby[i].angle: %d", nearby[i].angle);
-
-	  	// draw compass
-	  	nearby[i].compass = gpath_create(&MINI_COMPASS_INFO);
-	  	gpath_move_to(nearby[i].compass, GPoint(124, 40));
-	  	//nearby[i].angle = TRIG_MAX_ANGLE/(12*i);
-	  	gpath_rotate_to(nearby[i].compass, nearby[i].angle);
-
+	  // Read tuples
+	  Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMON1ID + (i * 4));
+	  if(pokemon_id_tuple) {
+	  	nearby[i].dex = pokemon_id_tuple->value->int32;
 	  }
 
-	  menu_layer_reload_data(menu);
+	  // break on first 0 ID - indicates end of data
+	  if (nearby[i].dex == 0) {
+	  	break;
+	  }
+
+	  Tuple *pokemon_expiration_tuple = dict_find(iterator, KEY_POKEMON1EXPIRATIONTIME + (i * 4));
+	  if(pokemon_expiration_tuple) {
+	    expiration = pokemon_expiration_tuple->value->int32;
+	  }
+
+	  expiration_delta = expiration - now;
+
+	  Tuple *pokemon_distance_tuple = dict_find(iterator, KEY_POKEMON1DISTANCE + (i * 4));
+	  if(pokemon_distance_tuple) {
+	  	distance = pokemon_distance_tuple->value->int32;
+	  }
+
+	  Tuple *pokemon_bearing_tuple = dict_find(iterator, KEY_POKEMON1BEARING + (i * 4));
+	  if(pokemon_bearing_tuple) {
+	  	bearing = pokemon_bearing_tuple->value->int32;
+	  }
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "bearing: %d", bearing);
+
+	  // TODO: add check for overall validity first (inc. e.g. already expired and not worth showing)
+
+	  // TODO: refactor ASAP!
+	  NUM_POKEMON = i + 1;
+
+	  // need to destroy old bitmap first
+	  if(nearby[i].sprite != NULL) {
+	  	gbitmap_destroy(nearby[i].sprite);
+	  }
+
+	  // TODO: recycle instead, since it will realistically be just a few pokemon based on data so far
+	  // TODO: and do a better job of clean-up in general...?
+
+	  nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
+	  //strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
+	  snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n%d:%02d\n%d m", poke_names[nearby[i].dex], 
+	    (int) expiration_delta / 60, (int) expiration_delta % 60, distance); 
+
+	  nearby[i].angle = bearing * TRIG_MAX_ANGLE / 360;
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "nearby[i].angle: %d", nearby[i].angle);
+
+	  // draw compass
+	  nearby[i].compass = gpath_create(&MINI_COMPASS_INFO);
+	  gpath_move_to(nearby[i].compass, GPoint(124, 40));
+	  //nearby[i].angle = TRIG_MAX_ANGLE/(12*i);
+	  gpath_rotate_to(nearby[i].compass, nearby[i].angle);
+
 	}
+
+	menu_layer_reload_data(menu);
+	  
+	if(loading){
+	  if(NUM_POKEMON >= 1) menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
+	  window_stack_push(list, true);
+	  vibes_short_pulse();
+	  loading = false;
+	}
+  }
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -302,6 +320,22 @@ void compass_handler(CompassHeadingData heading){
 
 
 void init(){
+	
+	splash = window_create();
+	window_set_background_color(splash, GColorBlack);
+	splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_POGO);
+	GRect window_bounds = layer_get_bounds(window_get_root_layer(splash));
+	GRect bitmap_bounds = gbitmap_get_bounds(splash_bitmap);
+	bitmap_layer = bitmap_layer_create(GRect( (window_bounds.size.w - bitmap_bounds.size.w)/2, (window_bounds.size.h - bitmap_bounds.size.h)/2, bitmap_bounds.size.w, bitmap_bounds.size.h) );
+	bitmap_layer_set_bitmap(bitmap_layer, splash_bitmap);
+	layer_add_child(window_get_root_layer(splash), bitmap_layer_get_layer(bitmap_layer));
+	loading_layer = text_layer_create(GRect(0,window_bounds.size.w/2 + bitmap_bounds.size.w/2, PBL_IF_RECT_ELSE(144,180), 28));
+	text_layer_set_text(loading_layer, "Loading...");
+	text_layer_set_background_color(loading_layer, GColorBlack);
+	text_layer_set_text_color(loading_layer, GColorWhite);
+	text_layer_set_text_alignment(loading_layer, GTextAlignmentCenter);
+	layer_add_child(window_get_root_layer(splash), text_layer_get_layer(loading_layer));
+	window_stack_push(splash, true);
 
 	// Register callbacks
 	app_message_register_inbox_received(inbox_received_callback);
@@ -389,15 +423,18 @@ void init(){
 	strncpy(nearby[4].listBuffer, "Omanyte\n\n163 m", sizeof(nearby[4].listBuffer));
 */
 	// crude loading message
+	/*
 	NUM_POKEMON = 1;
 
 	nearby[0].sprite = gbitmap_create_with_resource(poke_images[0]);
 	strncpy(nearby[0].listBuffer, "Loading...", sizeof(nearby[0].listBuffer));
-
+	*/
 	compass_service_subscribe(compass_handler);
-
-	menu_layer_reload_data(menu);
-	menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
+	
+	//menu_layer_reload_data(menu);
+	//menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
+	
+	//window_stack_push(list, true);	
 
 	alert = layer_create(GRect(PBL_IF_ROUND_ELSE(40, 34), 200, 100, 100));
 
@@ -413,9 +450,6 @@ void init(){
     layer_add_child(alert, bitmap_layer_get_layer(alertBackgroundLayer));
 
 	layer_add_child(overlay, alert);
-
-	window_stack_push(list, true);
-
 }
 
 void deinit(){
