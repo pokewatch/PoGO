@@ -9,6 +9,10 @@ var hasBeenNotified = false;
 var gpsErrorReported = false;
 
 var MessageQueue = require("./MessageQueue");
+var DummyDataCreator = require("./dummyData");
+
+var dummyData = DummyDataCreator.createDummyData(5, 45, -97);
+console.log(JSON.stringify(data));
 
 var firstTimeUpdatingLocation = true;
 
@@ -283,7 +287,7 @@ Pebble.addEventListener("ready", function(e){
 	console.log('PebbleKit JS ready!');
 
     if(localStorage.notified === "yes") hasBeenNotified = true;
-    
+
     if(!hasBeenNotified){
         Pebble.showSimpleNotificationOnPebble("Message from Prof. Willow", "Thanks for downloading the Pokemon GO Radar app for Pebble! You may need to rotate your wrist a few times to calibrate the compass. And, as always, remember to stay alert! Have fun!!!");
         localStorage.notified = "yes";
