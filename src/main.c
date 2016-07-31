@@ -190,8 +190,11 @@ void displayToast(char *string) {
 		GRect from_frame =  GRect(PBL_IF_ROUND_ELSE(40, 22), 180, 100, 100);
 		GRect to_frame = GRect(PBL_IF_ROUND_ELSE(40, 22), 34, 100, 100);
 
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status: %s", string);
-		text_layer_set_text(alertText, string);
+		static char buf[] = "thisisfillertextpleaseignorethisistheonlyfixifound00000000000";    /* <-- implicit NUL-terminator at the end here */
+    snprintf(buf, sizeof(buf), "%s", string);
+
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Status: %s", buf);
+		text_layer_set_text(alertText, buf);
 
 		vibes_double_pulse();
 
@@ -221,8 +224,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *tuple;
   tuple = dict_find(iterator, KEY_DISPLAYMESSAGE);
   if(tuple) {
-  	if(tuple->value->cstring) {
-		displayToast(tuple->value->cstring);
+  	if(tuple->value->cstring != 0) {
+			APP_LOG(APP_LOG_LEVEL_ERROR, "String is %s" , tuple->value->cstring);
+			displayToast(tuple->value->cstring);
    	}
   } else {
 
@@ -273,8 +277,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
 	  nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
 	  //strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
-	  snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n%d:%02d\n%d m", poke_names[nearby[i].dex], 
-	    (int) expiration_delta / 60, (int) expiration_delta % 60, distance); 
+	  snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n%d:%02d\n%d m", poke_names[nearby[i].dex],
+	    (int) expiration_delta / 60, (int) expiration_delta % 60, distance);
 
 	  nearby[i].angle = bearing * TRIG_MAX_ANGLE / 360;
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, "nearby[i].angle: %d", nearby[i].angle);
@@ -288,11 +292,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 	}
 
 	menu_layer_reload_data(menu);
-	  
+
 	if(loading){
 	  if(NUM_POKEMON >= 1) menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
 	  window_stack_push(list, true);
 	  vibes_short_pulse();
+		layer_add_child(window_get_root_layer(list), alert);
 	  loading = false;
 	}
   }
@@ -320,7 +325,7 @@ void compass_handler(CompassHeadingData heading){
 
 
 void init(){
-	
+
 	splash = window_create();
 	window_set_background_color(splash, GColorBlack);
 	splash_bitmap = gbitmap_create_with_resource(RESOURCE_ID_POGO);
@@ -430,11 +435,11 @@ void init(){
 	strncpy(nearby[0].listBuffer, "Loading...", sizeof(nearby[0].listBuffer));
 	*/
 	compass_service_subscribe(compass_handler);
-	
+
 	//menu_layer_reload_data(menu);
 	//menu_layer_set_selected_index(menu, (MenuIndex){0,1}, MenuRowAlignNone, false);
-	
-	//window_stack_push(list, true);	
+
+	//window_stack_push(list, true);
 
 	alert = layer_create(GRect(PBL_IF_ROUND_ELSE(40, 34), 200, 100, 100));
 
@@ -449,7 +454,7 @@ void init(){
     bitmap_layer_set_bitmap(alertBackgroundLayer, alertBackground);
     layer_add_child(alert, bitmap_layer_get_layer(alertBackgroundLayer));
 
-	layer_add_child(overlay, alert);
+	layer_add_child(window_get_root_layer(splash), alert);
 }
 
 void deinit(){
