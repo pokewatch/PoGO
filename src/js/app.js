@@ -11,6 +11,7 @@ var gpsErrorReported = false;
 var MessageQueue = require("./MessageQueue");
 
 var firstTimeUpdatingLocation = true;
+var serverError = false;
 
 // XMLHttpRequest helper
 var xhrRequest = function (url, type, callback) {
@@ -54,14 +55,26 @@ function getPokemon() { //(latitude, longitude) {
 
 				// TODO: something better vs. continual pop-ups!
 				MessageQueue.sendAppMessage({"DisplayMessage": "Servers are down for maintenance"});
+				serverError = true;
+
+			} else {
+				// need to check for maintenance first, otherwise we don't even have JSON
+				var scanJson = JSON.parse(scanResponseText);
+				console.log(scanResponseText); // JSON.stringify() not necessary!
+
+				// TODO: should really check JSON validity too vs. assuming?
+
+				// exclude throttling error (throttling error doesn't really matter since
+				// we can still view pokes from last scan...?)
+				if ((scanJson.status === "error") && (scanJson.message !== "{scan-throttle}")) {
+					MessageQueue.sendAppMessage({"DisplayMessage": "Server error"});
+					serverError = true;
+				} else {
+					serverError = false;
+				}
 
 			}
 
-			var scanJson = JSON.parse(scanResponseText);
-			console.log(scanResponseText); // JSON.stringify() not necessary!
-
-			// TODO: check scanResponseText success (although...does throttling error matter
-			// since we can still view pokes from last scan...?
 
 			xhrRequest(dataUrl, 'GET', function(dataResponseText) {
 				var json = JSON.parse(dataResponseText);
@@ -167,7 +180,11 @@ function getPokemon() { //(latitude, longitude) {
 					);
 				} else {
 					// no pokemon found!
-					MessageQueue.sendAppMessage({"DisplayMessage": "No Pokemon are nearby"});
+
+					if (!serverError) {
+						// only send if there's not already a server error toast on the way too
+						MessageQueue.sendAppMessage({"DisplayMessage": "No Pokemon are nearby"});
+					}
 				}
 			});
 		});
