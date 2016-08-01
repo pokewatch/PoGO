@@ -12,7 +12,7 @@ var MessageQueue = require("./MessageQueue");
 var DummyDataCreator = require("./dummyData");
 
 var dummyData = DummyDataCreator.createDummyData(5, 45, -97);
-console.log(JSON.stringify(data));
+console.log(JSON.stringify(dummyData));
 
 var firstTimeUpdatingLocation = true;
 
