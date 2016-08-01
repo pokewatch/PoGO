@@ -12,10 +12,10 @@ module.exports = {
       pokemon.id = idCounter++ + "";
       pokemon.expiration_time = (Math.floor((new Date).getTime()/1000)) + (Math.floor(Math.random() * 600));
       pokemon.longitude = centerLong + ((Math.random() - 0.5) / 100);
-      pokemon.latitiude = centerLat + ((Math.random() - 0.5) / 100);
-      pokemon.uid = "HAHA F U THESE AREN'T REAL"
+      pokemon.latitude = centerLat + ((Math.random() - 0.5) / 100);
+      pokemon.uid = "{unused}"
       pokemon.is_alive = true;
-      pokemon.pokemonId = Math.floor((Math.random() / 100) * (150 - 1 + 1)) + 1;
+      pokemon.pokemonId = (Math.floor(Math.random() * (150 - 1 + 1)) + 1).toString();
       pokemon.data = "[]";
       pokemonList.push(pokemon);
     }
