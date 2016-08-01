@@ -106,102 +106,101 @@ function getPokemon() { //(latitude, longitude) {
 				// TODO: status check!
 				console.log('status is "' + json.status + '"');
 
+				var allNearbyPokemon = [];
+
+				var i;
+				for (i = 0; i < json.pokemon.length; i++) {
+
+					// TODO: should still actually verify vs. using blindly!
+					console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
+					// PokeVision is string for some reason
+					var pokemonId = Number(json.pokemon[i].pokemonId);
+					console.log('pokemonId is "' + pokemonId + '"');
+
+					var pokemonExpirationTime = json.pokemon[i].expiration_time;
+					console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
+
+					var pokemonLatitude = json.pokemon[i].latitude;
+					console.log('pokemonLatitude is "' + pokemonLatitude + '"');
+					var pokemonLongitude = json.pokemon[i].longitude;
+					console.log('pokemonLongitude is "' + pokemonLongitude + '"');
+
+					var pokemonDistance = getDistance(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
+					var pokemonBearing = getBearing(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
+
+					var pokemonUID = json.pokemon[i].uid;
+
+					// fails on iOS!
+					// per @katharine:
+					// > PebbleKit JS Android is not to spec.
+					//allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
+
+					var pokemonData = {
+						"i": i,
+						"pokemonId": pokemonId,
+						"pokemonExpirationTime": pokemonExpirationTime,
+						"pokemonLatitude": pokemonLatitude,
+						"pokemonLongitude": pokemonLongitude,
+						"pokemonDistance": pokemonDistance,
+						"pokemonBearing": pokemonBearing,
+						"pokemonUID": pokemonUID
+					};
+					allNearbyPokemon.push(pokemonData);
+
+				}
+
+				console.log("allNearbyPokemon: " + JSON.stringify(allNearbyPokemon));
+
+				// sort by distance
+				allNearbyPokemon.sort(function(a, b) {
+					return a.pokemonDistance - b.pokemonDistance;
+				});
+
+				//get rid of duplicates that have the same UID
+				for(var i=0; i<allNearbyPokemon.length-1; i++ ) {
+					if (allNearbyPokemon[i+1] != undefined && allNearbyPokemon[i].pokemonId == allNearbyPokemon[i+1].pokemonId && allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[i+1].pokemonLatitude  && allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[i+1].pokemonLongitude) {
+						console.log("removed pokemon at index " + i)
+						delete allNearbyPokemon[i];
+						//allNearbyPokemon.splice(i, 1);
+					}
+				}
+
+				allNearbyPokemon = allNearbyPokemon.filter( function( el ){ return (typeof el !== "undefined"); } );
+
+				// Assemble dictionary using our keys
+				var dictionary = {};
+
+				// take closest 9 (or fewer if not available; sentinel indicated by pokemonId == 0)
+				var j;
+				for (j = 0; j < 9; j++) {
+
+					if (j < allNearbyPokemon.length) {
+						dictionary["Pokemon" + (j + 1) + "Id"] = allNearbyPokemon[j].pokemonId;
+						dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = allNearbyPokemon[j].pokemonExpirationTime;
+						dictionary["Pokemon" + (j + 1) + "Distance"] = allNearbyPokemon[j].pokemonDistance;
+						dictionary["Pokemon" + (j + 1) + "Bearing"] = allNearbyPokemon[j].pokemonBearing;
+					} else {
+						dictionary["Pokemon" + (j + 1) + "Id"] = 0;
+						dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = 0;
+						dictionary["Pokemon" + (j + 1) + "Distance"] = 0;
+						dictionary["Pokemon" + (j + 1) + "Bearing"] = 0;
+						break;
+					}
+				}
+				console.log("dictionary: " + JSON.stringify(dictionary));
+
+				// Send to Pebble
+				MessageQueue.sendAppMessage(dictionary,
+					function(e) {
+						console.log("AppMessage sent to Pebble successfully!");
+					},
+					function(e) {
+						console.log("Error sending AppMessage to Pebble!");
+					}
+				);
+
 				// TODO: much better error checking???
-				if (json.pokemon.length > 0) {
-
-					var allNearbyPokemon = [];
-
-					var i;
-					for (i = 0; i < json.pokemon.length; i++) {
-
-						// TODO: should still actually verify vs. using blindly!
-						console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
-						// PokeVision is string for some reason
-						var pokemonId = Number(json.pokemon[i].pokemonId);
-						console.log('pokemonId is "' + pokemonId + '"');
-
-						var pokemonExpirationTime = json.pokemon[i].expiration_time;
-						console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
-
-						var pokemonLatitude = json.pokemon[i].latitude;
-						console.log('pokemonLatitude is "' + pokemonLatitude + '"');
-						var pokemonLongitude = json.pokemon[i].longitude;
-						console.log('pokemonLongitude is "' + pokemonLongitude + '"');
-
-						var pokemonDistance = getDistance(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
-						var pokemonBearing = getBearing(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
-
-						var pokemonUID = json.pokemon[i].uid;
-
-						// fails on iOS!
-						// per @katharine:
-						// > PebbleKit JS Android is not to spec.
-						//allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
-
-						var pokemonData = {
-							"i": i,
-							"pokemonId": pokemonId,
-							"pokemonExpirationTime": pokemonExpirationTime,
-							"pokemonLatitude": pokemonLatitude,
-							"pokemonLongitude": pokemonLongitude,
-							"pokemonDistance": pokemonDistance,
-							"pokemonBearing": pokemonBearing,
-							"pokemonUID": pokemonUID
-						};
-						allNearbyPokemon.push(pokemonData);
-
-					}
-
-					console.log("allNearbyPokemon: " + JSON.stringify(allNearbyPokemon));
-
-					// sort by distance
-					allNearbyPokemon.sort(function(a, b) {
-						return a.pokemonDistance - b.pokemonDistance;
-					});
-
-					//get rid of duplicates that have the same UID
-					for(var i=0; i<allNearbyPokemon.length-1; i++ ) {
-					  if (allNearbyPokemon[i+1] != undefined && allNearbyPokemon[i].pokemonId == allNearbyPokemon[i+1].pokemonId && allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[i+1].pokemonLatitude  && allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[i+1].pokemonLongitude) {
-					    console.log("removed pokemon at index " + i)
-					    delete allNearbyPokemon[i];
-					    //allNearbyPokemon.splice(i, 1);
-					  }
-					}
-
-					allNearbyPokemon = allNearbyPokemon.filter( function( el ){ return (typeof el !== "undefined"); } );
-
-					// Assemble dictionary using our keys
-					var dictionary = {};
-
-					// take closest 9 (or fewer if not available; sentinel indicated by pokemonId == 0)
-					var j;
-					for (j = 0; j < 9; j++) {
-
-						if (j < allNearbyPokemon.length) {
-							dictionary["Pokemon" + (j + 1) + "Id"] = allNearbyPokemon[j].pokemonId;
-							dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = allNearbyPokemon[j].pokemonExpirationTime;
-							dictionary["Pokemon" + (j + 1) + "Distance"] = allNearbyPokemon[j].pokemonDistance;
-							dictionary["Pokemon" + (j + 1) + "Bearing"] = allNearbyPokemon[j].pokemonBearing;
-						} else {
-							dictionary["Pokemon" + (j + 1) + "Id"] = 0;
-							dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = 0;
-							dictionary["Pokemon" + (j + 1) + "Distance"] = 0;
-							dictionary["Pokemon" + (j + 1) + "Bearing"] = 0;
-							break;
-						}
-					}
-					console.log("dictionary: " + JSON.stringify(dictionary));
-
-					// Send to Pebble
-					MessageQueue.sendAppMessage(dictionary,
-						function(e) {
-							console.log("AppMessage sent to Pebble successfully!");
-						},
-						function(e) {
-							console.log("Error sending AppMessage to Pebble!");
-						}
-					);
-				} else {
+				if (json.pokemon.length <= 0) {
 					// no pokemon found!
 
 					if (!serverError) {
