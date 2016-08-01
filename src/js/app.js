@@ -11,7 +11,7 @@ var gpsErrorReported = false;
 var MessageQueue = require("./MessageQueue");
 var DummyDataCreator = require("./dummyData");
 
-var dummyData = DummyDataCreator.createDummyData(5, 45, -97);
+var dummyData; // = DummyDataCreator.createDummyData(5, 45, -97);
 console.log(JSON.stringify(dummyData));
 
 var firstTimeUpdatingLocation = true;
@@ -71,7 +71,14 @@ function getPokemon() { //(latitude, longitude) {
 				// exclude throttling error (throttling error doesn't really matter since
 				// we can still view pokes from last scan...?)
 				if ((scanJson.status === "error") && (scanJson.message !== "{scan-throttle}")) {
-					MessageQueue.sendAppMessage({"DisplayMessage": "Server error"});
+
+					// advise of "demo mode" too if we're in it:
+					if (dummyData != null) {
+						MessageQueue.sendAppMessage({"DisplayMessage": "Server error" + 
+							"\n\nPlease enjoy this DEMO using DUMMY DATA! :)"});
+					} else {
+						MessageQueue.sendAppMessage({"DisplayMessage": "Server error"});
+					}
 					serverError = true;
 				} else {
 					serverError = false;
@@ -82,6 +89,18 @@ function getPokemon() { //(latitude, longitude) {
 
 			xhrRequest(dataUrl, 'GET', function(dataResponseText) {
 				var json = JSON.parse(dataResponseText);
+
+				// TODO: this is silly - really should just not do xhrRequest at all, but
+				// as a quick hack to enable "demo mode" for now...
+				if (serverError) {
+					// populate if not set (once)
+					if (dummyData == null) {
+						dummyData = DummyDataCreator.createDummyData(5, myLatitude, myLongitude);
+					}
+					json = dummyData;
+				}
+
+
 				console.log(dataResponseText); // JSON.stringify() not necessary!
 
 				// TODO: status check!

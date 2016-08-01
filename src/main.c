@@ -167,7 +167,9 @@ void config(void *context){
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
   // call API on the 15s (for now until distance refresh implemented)
-  if (tick_time->tm_sec % 15 == 0) {
+  //if (tick_time->tm_sec % 15 == 0) {
+  // TODO: restore temporary decrease in frequency when demo mode is no longer nec.
+  if (tick_time->tm_sec % 30 == 0) {
 
   	APP_LOG(APP_LOG_LEVEL_INFO, "tick_handler() 0/15/30/45");
 
@@ -199,7 +201,9 @@ void displayToast(char *string) {
 		vibes_double_pulse();
 
 		animate_layer(alert, &from_frame, &to_frame, 1000, 0);
-		animate_layer(alert, &to_frame, &from_frame, 1000, 3000);
+		//animate_layer(alert, &to_frame, &from_frame, 1000, 3000);
+		// TODO: remove temporary increase when demo mode is no longer nec.
+		animate_layer(alert, &to_frame, &from_frame, 1000, 5000);
 }
 
 static void bluetooth_callback(bool connected) {
