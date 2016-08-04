@@ -1,5 +1,5 @@
 {
-    "author": "Mathew Reiss, ishotjr, pebbledev #pokemon",
+    "author": "Mathew Reiss, Rob Spiess, ishotjr, liammcmains",
     "dependencies": {},
     "keywords": [],
     "name": "pok-mon-go-radar",
@@ -9,9 +9,31 @@
         ],
         "displayName": "Pok\u00e9mon GO Radar",
         "enableMultiJS": true,
+        "messageKeys": {
+            "DisplayMessage": 6,
+            "PokemonExpirationTime": 1,
+            "PokemonId": 0,
+            "PokemonLatitude": 2,
+            "PokemonLongitude": 3,
+            "RequestType": 7,
+            "UserLatitude": 4,
+            "UserLongitude": 5
+        },
         "projectType": "native",
         "resources": {
             "media": [
+                {
+                    "file": "images/pogo.png",
+                    "name": "POGO",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/pokeball.png",
+                    "name": "IMAGE_pokeball",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
                 {
                     "file": "images/unknown.png",
                     "name": "UNKNOWN",
@@ -30,11 +52,6 @@
                 {
                     "file": "images/trainer.png",
                     "name": "TRAINER",
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/poke9.png",
-                    "name": "IMAGE_poke9",
                     "type": "bitmap"
                 },
                 {
@@ -85,6 +102,11 @@
                 {
                     "file": "images/poke90.png",
                     "name": "IMAGE_poke90",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/poke9.png",
+                    "name": "IMAGE_poke9",
                     "type": "bitmap"
                 },
                 {
@@ -418,11 +440,6 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/poke2.png",
-                    "name": "IMAGE_poke2",
-                    "type": "bitmap"
-                },
-                {
                     "file": "images/poke29.png",
                     "name": "IMAGE_poke29",
                     "type": "bitmap"
@@ -473,6 +490,11 @@
                     "type": "bitmap"
                 },
                 {
+                    "file": "images/poke2.png",
+                    "name": "IMAGE_poke2",
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/poke1.png",
                     "name": "IMAGE_poke1",
                     "type": "bitmap"
@@ -510,6 +532,11 @@
                 {
                     "file": "images/poke15.png",
                     "name": "IMAGE_poke15",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/poke14.png",
+                    "name": "IMAGE_poke14",
                     "type": "bitmap"
                 },
                 {
@@ -563,16 +590,6 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/poke14.png",
-                    "name": "IMAGE_poke14",
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/poke13.png",
-                    "name": "IMAGE_poke13",
-                    "type": "bitmap"
-                },
-                {
                     "file": "images/poke139.png",
                     "name": "IMAGE_poke139",
                     "type": "bitmap"
@@ -620,6 +637,11 @@
                 {
                     "file": "images/poke130.png",
                     "name": "IMAGE_poke130",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/poke13.png",
+                    "name": "IMAGE_poke13",
                     "type": "bitmap"
                 },
                 {
@@ -678,6 +700,11 @@
                     "type": "bitmap"
                 },
                 {
+                    "file": "images/poke11.png",
+                    "name": "IMAGE_poke11",
+                    "type": "bitmap"
+                },
+                {
                     "file": "images/poke119.png",
                     "name": "IMAGE_poke119",
                     "type": "bitmap"
@@ -725,11 +752,6 @@
                 {
                     "file": "images/poke110.png",
                     "name": "IMAGE_poke110",
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/poke11.png",
-                    "name": "IMAGE_poke11",
                     "type": "bitmap"
                 },
                 {
@@ -799,8 +821,8 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/pogo.png",
-                    "name": "POGO",
+                    "file": "images/alertBackground.png",
+                    "name": "ALERT_BACKGROUND",
                     "type": "bitmap"
                 },
                 {
@@ -809,11 +831,6 @@
                     "targetPlatforms": null,
                     "trackingAdjust": -1,
                     "type": "font"
-                },
-                {
-                    "file": "images/alertBackground.png",
-                    "name": "ALERT_BACKGROUND",
-                    "type": "bitmap"
                 }
             ]
         },
@@ -826,47 +843,7 @@
         "uuid": "6532f36c-e853-432c-8784-2e9f5c042cfc",
         "watchapp": {
             "watchface": false
-        },
-        "messageKeys": {
-          "Pokemon1Id": 0,
-          "Pokemon1ExpirationTime": 1,
-          "Pokemon1Distance": 2,
-          "Pokemon1Bearing": 3,
-          "Pokemon2Id": 4,
-          "Pokemon2ExpirationTime": 5,
-          "Pokemon2Distance": 6,
-          "Pokemon2Bearing": 7,
-          "Pokemon3Id": 8,
-          "Pokemon3ExpirationTime": 9,
-          "Pokemon3Distance": 10,
-          "Pokemon3Bearing": 11,
-          "Pokemon4Id": 12,
-          "Pokemon4ExpirationTime": 13,
-          "Pokemon4Distance": 14,
-          "Pokemon4Bearing": 15,
-          "Pokemon5Id": 16,
-          "Pokemon5ExpirationTime": 17,
-          "Pokemon5Distance": 18,
-          "Pokemon5Bearing": 19,
-          "Pokemon6Id": 20,
-          "Pokemon6ExpirationTime": 21,
-          "Pokemon6Distance": 22,
-          "Pokemon6Bearing": 23,
-          "Pokemon7Id": 24,
-          "Pokemon7ExpirationTime": 25,
-          "Pokemon7Distance": 26,
-          "Pokemon7Bearing": 27,
-          "Pokemon8Id": 28,
-          "Pokemon8ExpirationTime": 29,
-          "Pokemon8Distance": 30,
-          "Pokemon8Bearing": 31,
-          "Pokemon9Id": 32,
-          "Pokemon9ExpirationTime": 33,
-          "Pokemon9Distance": 34,
-          "Pokemon9Bearing": 35,
-          "RequestType": 36,
-          "DisplayMessage" : 37
         }
     },
-    "version": "0.6.0"
+    "version": "0.7.0"
 }
