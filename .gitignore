@@ -1,0 +1,14 @@
+# Ignore build generated files
+build/
+dist/
+dist.zip
+
+# Ignore Screenshots
+pebble-screenshot_*
+pebble_screenshot_*
+
+# Ignore waf lock file
+.lock-waf*
+
+# Ignore installed node modules
+node_modules/
