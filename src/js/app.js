@@ -1,5 +1,10 @@
 //"use strict";
 
+// Mock data for testing:
+var useMockData = true; //false;
+var date = new Date();
+var startTime = date.getTime();
+
 
 var myLatitude, myLongitude;
 var hasBeenNotified = false;
@@ -44,13 +49,19 @@ function getPokemon() { //(latitude, longitude) {
 		console.log("myLatitude: " + myLatitude);
 		console.log("myLongitude: " + myLongitude);
 
-		// live PokeVision data, hard-coded to Ann Arbor for now
-		var scanUrl = 'https://pokevision.com/map/scan/' + myLatitude + '/' + myLongitude;
-		var dataUrl = 'https://pokevision.com/map/data/' + myLatitude + '/' + myLongitude;
+		// live PokeVision data
+		//var scanUrl = 'https://pokevision.com/map/scan/' + myLatitude + '/' + myLongitude;
+		//var dataUrl = 'https://pokevision.com/map/data/' + myLatitude + '/' + myLongitude;
 
 		// static (stable!) example of PokeVision data
 		//var scanUrl = 'https://mathewreiss.github.io/PoGO/data.json';
 		//var dataUrl = 'https://mathewreiss.github.io/PoGO/data.json';
+
+		// static example of new back end
+		//var scanUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
+		var dataUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
+
+		/*
 
 		// TODO: is this OK?
 		xhrRequest(scanUrl, 'GET', function(scanResponseText) {
@@ -85,9 +96,11 @@ function getPokemon() { //(latitude, longitude) {
 				}
 
 			}
+		*/
 
 
 			xhrRequest(dataUrl, 'GET', function(dataResponseText) {
+				console.log(dataResponseText); // JSON.stringify() not necessary!
 				var json = JSON.parse(dataResponseText);
 
 				// TODO: this is silly - really should just not do xhrRequest at all, but
@@ -104,34 +117,46 @@ function getPokemon() { //(latitude, longitude) {
 				console.log(dataResponseText); // JSON.stringify() not necessary!
 
 				// TODO: status check!
-				console.log('status is "' + json.status + '"');
+				//console.log('status is "' + json.status + '"');
 
 				// TODO: much better error checking???
-				if (json.pokemon.length > 0) {
+				if (json.pokemons.length > 0) {
 
 					var allNearbyPokemon = [];
 
 					var i;
-					for (i = 0; i < json.pokemon.length; i++) {
+					for (i = 0; i < json.pokemons.length; i++) {
 
 						// TODO: should still actually verify vs. using blindly!
-						console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
+						console.log('pokemon[' + i + '].pokemon_id is "' + json.pokemons[i].pokemon_id + '"');
 						// PokeVision is string for some reason
-						var pokemonId = Number(json.pokemon[i].pokemonId);
+						var pokemonId = json.pokemons[i].pokemon_id; //Number(json.pokemons[i].pokemonId);
 						console.log('pokemonId is "' + pokemonId + '"');
 
-						var pokemonExpirationTime = json.pokemon[i].expiration_time;
+
+						var pokemonExpirationTime = json.pokemons[i].disappear_time;
+
+						// offset static times based on app launch time
+						if (useMockData) {
+							pokemonExpirationTime = pokemonExpirationTime - 1470884585708  + 
+								(7 * 60 * 1000) + startTime;
+						}
+
+						// new data uses JS time vs. epoch, so divide by 1000 (for now/to prevent the need for changes to .c)
+						pokemonExpirationTime /= 1000;
+
 						console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
 
-						var pokemonLatitude = json.pokemon[i].latitude;
+
+						var pokemonLatitude = json.pokemons[i].latitude;
 						console.log('pokemonLatitude is "' + pokemonLatitude + '"');
-						var pokemonLongitude = json.pokemon[i].longitude;
+						var pokemonLongitude = json.pokemons[i].longitude;
 						console.log('pokemonLongitude is "' + pokemonLongitude + '"');
 
 						var pokemonDistance = getDistance(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
 						var pokemonBearing = getBearing(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
 
-						var pokemonUID = json.pokemon[i].uid;
+						var pokemonUID = json.pokemons[i].uid;
 
 						// fails on iOS!
 						// per @katharine:
@@ -210,7 +235,7 @@ function getPokemon() { //(latitude, longitude) {
 					}
 				}
 			});
-		});
+		//});
 	}
 }
 

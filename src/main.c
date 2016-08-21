@@ -169,7 +169,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // call API on the 15s (for now until distance refresh implemented)
   //if (tick_time->tm_sec % 15 == 0) {
   // TODO: restore temporary decrease in frequency when demo mode is no longer nec.
-  if (tick_time->tm_sec % 30 == 0) {
+  if (tick_time->tm_sec % 15 == 0) {
 
   	APP_LOG(APP_LOG_LEVEL_INFO, "tick_handler() 0/15/30/45");
 
