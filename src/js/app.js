@@ -1,11 +1,19 @@
 //"use strict";
 
+// clay initialization
+var Clay = require('pebble-clay');
+var clayConfig = require('./config.json');
+// override defaults - no need for InboxReceivedHandler vs. just keeping it in JS
+var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
+var messageKeys = require('message_keys');
+
 // Mock data for testing:
-var useMockData = true; //false;
+var useMockData = false;
 var date = new Date();
 var startTime = date.getTime();
 
-
+// default to static data URL until config override
+var dataUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
 var myLatitude, myLongitude;
 var hasBeenNotified = false;
 //var pkmnLatitude, pkmnLongitude;
@@ -71,7 +79,7 @@ function getPokemon() { //(latitude, longitude) {
 
 		// static example of new back end
 		//var scanUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
-		var dataUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
+		//var dataUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
 
 		/*
 
@@ -409,6 +417,46 @@ Pebble.addEventListener("appmessage", function(e){
 	getPokemon();
 });
 
+
+// override default Clay autoHandleEvents with handling right here in JS
+Pebble.addEventListener("showConfiguration", function(e) {
+
+	console.log('showConfiguration');
+
+	// actually...don't need to override this one, just the other, but...
+	Pebble.openURL(clay.generateUrl());
+});
+
+Pebble.addEventListener("webviewclosed", function(e) {
+
+	console.log('webviewclosed');
+
+	if (e && !e.response) {
+		return;
+	}
+
+
+	var claySettings = clay.getSettings(e.response);
+	console.log("messageKeys.UseDataUrl: " + claySettings[messageKeys.UseDataUrl]);
+	console.log("messageKeys.DataUrl: " + claySettings[messageKeys.DataUrl]);
+	dataUrl = claySettings[messageKeys.DataUrl];
+
+	// TODO: set variables
+	// TODO: persist in localStorage
+	// TODO: load from localStorage (or default to dummy) if not found
+
+	/*
+	// Send settings values to watch side
+	Pebble.sendAppMessage(dict, function(e) {
+		console.log('Sent config data to Pebble');
+	}, function(e) {
+		console.log('Failed to send config data!');
+		console.log(JSON.stringify(e));
+	});
+	*/
+});
+
+
 function getLocation(){
 	if(navigator && navigator.geolocation){
 		navigator.geolocation.watchPosition(
@@ -460,3 +508,4 @@ function getLocation(){
 			}
 		}
 	}
+

@@ -1,6 +1,8 @@
 {
     "author": "Mathew Reiss, ishotjr, pebbledev #pokemon",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.2"
+    },
     "keywords": [],
     "name": "pok-mon-go-radar",
     "pebble": {
@@ -865,7 +867,9 @@
           "Pokemon9Distance": 34,
           "Pokemon9Bearing": 35,
           "RequestType": 36,
-          "DisplayMessage" : 37
+          "DisplayMessage" : 37,
+          "UseDataUrl" : 38,
+          "DataUrl" : 39
         }
     },
     "version": "0.8.0"

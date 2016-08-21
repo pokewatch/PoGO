@@ -1,0 +1,43 @@
+[
+  { 
+    "type": "heading", 
+    "defaultValue": "Pok\u00e9mon GO Radar" 
+  }, 
+  { 
+    "type": "text", 
+    "defaultValue": "This project has truly been a community effort - thanks to all of the <a href=\"http://slack.pbldev.io/\" target=\"_blank\">pebbledev</a> #pokemon members, and especially to @mathew and @pautomas for the initial UI/functionality, @liammcmains for the many late nights of assistance and support, and @robisodd for his amazing improvements and optimization, many of which we have yet to dazzle you with as we focus on back-end solutions!<br>-ishotjr <img title=\":bowtie:\" alt=\":bowtie:\" src=\"https://assets.github.com/images/icons/emoji/bowtie.png\" height=\"20\" width=\"20\" align=\"absmiddle\">" 
+  },
+  {
+  "type": "section",
+  "items": [
+    {
+      "type": "heading",
+      "defaultValue": "Pokemon Data Source"
+    },
+    { 
+      "type": "text", 
+      "defaultValue": "We're working on a solution to the recent server issues - in the meantime, random dummy Pokemon data will be generated to demonstrate app functionality.  If you are part of our private beta testing group, you can override the default data with a test server URL that we will provide." 
+    },
+    {
+      "type": "toggle",
+      "messageKey": "UseDataUrl",
+      "defaultValue": false,
+      "label": "Override Dummy Data"
+    },
+    {
+      "type": "input",
+      "messageKey": "DataUrl",
+      "defaultValue": "https://pokewatch.github.io/PoGO/unknown6.json",
+      "label": "Data URL",
+      "attributes": {
+        "placeholder": "https://pokewatch.github.io/PoGO/unknown6.json",
+        "type": "url"
+      }
+    },
+    {
+      "type": "submit",
+      "defaultValue": "Save"
+    }
+  ]
+}
+]
