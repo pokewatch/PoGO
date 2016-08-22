@@ -8,12 +8,13 @@ var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 var messageKeys = require('message_keys');
 
 // Mock data for testing:
-var useMockData = false;
+var useDataUrl = false;
 var date = new Date();
 var startTime = date.getTime();
 
 // default to static data URL until config override
-var dataUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
+var staticUrl = "https://pokewatch.github.io/PoGO/unknown6.json";
+var dataUrl = staticUrl;
 var myLatitude, myLongitude;
 var hasBeenNotified = false;
 //var pkmnLatitude, pkmnLongitude;
@@ -118,6 +119,21 @@ function getPokemon() { //(latitude, longitude) {
 			}
 		*/
 
+		if (useDataUrl) {
+			// TODO: ???
+
+		} else {
+			// TODO: dummy data instead
+			if (dummyData != null) {
+				MessageQueue.sendAppMessage({"DisplayMessage": "Server error" + 
+					"\n\nPlease enjoy this DEMO using DUMMY DATA! :)"});
+			} else {
+				MessageQueue.sendAppMessage({"DisplayMessage": "Server error"});
+			}
+			//serverError = true;
+		}
+
+		// TODO: fix indentation here during clean-up!
 
 			xhrRequest(dataUrl, 'GET', function(dataResponseText) {
 				console.log(dataResponseText); // JSON.stringify() not necessary!
@@ -174,10 +190,13 @@ function getPokemon() { //(latitude, longitude) {
 								var pokemonExpirationTime = json.pokemons[i].disappear_time;
 
 								// offset static times based on app launch time
+								// TODO: update to use only when STATIC URL specified
+								/*
 								if (useMockData) {
 									pokemonExpirationTime = pokemonExpirationTime - 1470884585708  + 
 										(7 * 60 * 1000) + startTime;
 								}
+								*/
 
 								// new data uses JS time vs. epoch, so divide by 1000 (for now/to prevent the need for changes to .c)
 								pokemonExpirationTime /= 1000;
@@ -403,6 +422,19 @@ Pebble.addEventListener("ready", function(e){
         localStorage.notified = "yes";
     }
 
+	// load config from localStorage (or default to dummy) if not found
+	// TODO: check values etc.
+	if (localStorage.useDataUrl) {
+		useDataUrl = localStorage.useDataUrl;
+	} else {
+		useDataUrl = 0;
+	}
+	if (localStorage.dataUrl) {
+		dataUrl = localStorage.dataUrl;
+	} else {
+		dataUrl = staticUrl;
+	}
+
 	getLocation();
 	getPokemon();
 });
@@ -439,21 +471,13 @@ Pebble.addEventListener("webviewclosed", function(e) {
 	var claySettings = clay.getSettings(e.response);
 	console.log("messageKeys.UseDataUrl: " + claySettings[messageKeys.UseDataUrl]);
 	console.log("messageKeys.DataUrl: " + claySettings[messageKeys.DataUrl]);
+	// note returned values are 0/1 vs. true/false
+	useDataUrl = claySettings[messageKeys.UseDataUrl];
 	dataUrl = claySettings[messageKeys.DataUrl];
 
-	// TODO: set variables
-	// TODO: persist in localStorage
-	// TODO: load from localStorage (or default to dummy) if not found
-
-	/*
-	// Send settings values to watch side
-	Pebble.sendAppMessage(dict, function(e) {
-		console.log('Sent config data to Pebble');
-	}, function(e) {
-		console.log('Failed to send config data!');
-		console.log(JSON.stringify(e));
-	});
-	*/
+	// TODO: check returned values before storing?
+	localStorage.useDataUrl = useDataUrl;
+	localStorage.dataUrl = dataUrl;
 });
 
 
