@@ -8,7 +8,7 @@ var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 var messageKeys = require('message_keys');
 
 // Mock data for testing:
-var useDataUrl = false;
+var useDataUrl = 0;
 var date = new Date();
 var startTime = date.getTime();
 
@@ -26,7 +26,7 @@ var MessageQueue = require("./MessageQueue");
 var DummyDataCreator = require("./dummyData");
 
 var dummyData; // = DummyDataCreator.createDummyData(5, 45, -97);
-console.log(JSON.stringify(dummyData));
+//console.log(JSON.stringify(dummyData));
 
 var firstTimeUpdatingLocation = true;
 var serverError = false;
@@ -119,20 +119,6 @@ function getPokemon() { //(latitude, longitude) {
 			}
 		*/
 
-		if (useDataUrl) {
-			// TODO: ???
-
-		} else {
-			// TODO: dummy data instead
-			if (dummyData != null) {
-				MessageQueue.sendAppMessage({"DisplayMessage": "Server error" + 
-					"\n\nPlease enjoy this DEMO using DUMMY DATA! :)"});
-			} else {
-				MessageQueue.sendAppMessage({"DisplayMessage": "Server error"});
-			}
-			//serverError = true;
-		}
-
 		// TODO: fix indentation here during clean-up!
 
 			xhrRequest(dataUrl, 'GET', function(dataResponseText) {
@@ -148,17 +134,16 @@ function getPokemon() { //(latitude, longitude) {
 					serverError = true;
 				}
 
-				/*
 				// TODO: this is silly - really should just not do xhrRequest at all, but
 				// as a quick hack to enable "demo mode" for now...
-				if (serverError) {
+				if (useDataUrl == 0) {
 					// populate if not set (once)
 					if (dummyData == null) {
 						dummyData = DummyDataCreator.createDummyData(5, myLatitude, myLongitude);
 					}
 					json = dummyData;
+					MessageQueue.sendAppMessage({"DisplayMessage": "No server available - reverting to DEMO mode using DUMMY data..."});
 				}
-				*/
 
 
 				console.log(dataResponseText); // JSON.stringify() not necessary!
@@ -189,14 +174,13 @@ function getPokemon() { //(latitude, longitude) {
 
 								var pokemonExpirationTime = json.pokemons[i].disappear_time;
 
-								// offset static times based on app launch time
-								// TODO: update to use only when STATIC URL specified
-								/*
-								if (useMockData) {
+								// offset static times based on app launch time - ONLY when 
+								// static URL specified (and enabled!)
+								// TODO: care about capitalization etc.?
+								if ((useDataUrl == 1) && (dataUrl == staticUrl)) {
 									pokemonExpirationTime = pokemonExpirationTime - 1470884585708  + 
 										(7 * 60 * 1000) + startTime;
 								}
-								*/
 
 								// new data uses JS time vs. epoch, so divide by 1000 (for now/to prevent the need for changes to .c)
 								pokemonExpirationTime /= 1000;
@@ -472,7 +456,7 @@ Pebble.addEventListener("webviewclosed", function(e) {
 	console.log("messageKeys.UseDataUrl: " + claySettings[messageKeys.UseDataUrl]);
 	console.log("messageKeys.DataUrl: " + claySettings[messageKeys.DataUrl]);
 	// note returned values are 0/1 vs. true/false
-	useDataUrl = claySettings[messageKeys.UseDataUrl];
+	useDataUrl = Number(claySettings[messageKeys.UseDataUrl]);
 	dataUrl = claySettings[messageKeys.DataUrl];
 
 	// TODO: check returned values before storing?
