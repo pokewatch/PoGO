@@ -169,7 +169,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // call API on the 15s (for now until distance refresh implemented)
   //if (tick_time->tm_sec % 15 == 0) {
   // TODO: restore temporary decrease in frequency when demo mode is no longer nec.
-  if (tick_time->tm_sec % 30 == 0) {
+  if (tick_time->tm_sec % 15 == 0) {
 
   	APP_LOG(APP_LOG_LEVEL_INFO, "tick_handler() 0/15/30/45");
 
@@ -281,8 +281,23 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
 	  nearby[i].sprite = gbitmap_create_with_resource(poke_images[nearby[i].dex]);
 	  //strncpy(nearby[0].listBuffer, poke_names[nearby[0].dex], sizeof(nearby[0].listBuffer));
-	  snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n%d:%02d\n%d m", poke_names[nearby[i].dex],
-	    (int) expiration_delta / 60, (int) expiration_delta % 60, distance);
+
+	  // TODO: better
+	  if (expiration_delta < 0) {
+  		// expired pokemon should really be destroyed (or never present in data anyway!), but for now...
+	  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n-:--\n- m", poke_names[nearby[i].dex]);
+	  } else if (distance > 99999) {
+  		// format "k" if 100km+ (saving two characters vs. " km")
+	  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n%d:%02d\n%dk", poke_names[nearby[i].dex],
+	  	  (int) expiration_delta / 60, (int) expiration_delta % 60, distance / 1000);
+	  } else if (distance > 999) {
+  		// format " km" if 1000m+
+	  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n%d:%02d\n%d km", poke_names[nearby[i].dex],
+	  	  (int) expiration_delta / 60, (int) expiration_delta % 60, distance / 1000);
+	  } else {
+	  	snprintf(nearby[i].listBuffer, sizeof(nearby[i].listBuffer), "%s\n%d:%02d\n%d m", poke_names[nearby[i].dex],
+	  	  (int) expiration_delta / 60, (int) expiration_delta % 60, distance);
+	  }
 
 	  nearby[i].angle = bearing * TRIG_MAX_ANGLE / 360;
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, "nearby[i].angle: %d", nearby[i].angle);

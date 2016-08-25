@@ -1,6 +1,20 @@
 //"use strict";
 
+// clay initialization
+var Clay = require('pebble-clay');
+var clayConfig = require('./config.json');
+// override defaults - no need for InboxReceivedHandler vs. just keeping it in JS
+var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
+var messageKeys = require('message_keys');
 
+// Mock data for testing:
+var useDataUrl = 0;
+var date = new Date();
+var startTime = date.getTime();
+
+// default to static data URL until config override
+var staticUrl = "https://pokewatch.github.io/PoGO/unknown6.json";
+var dataUrl = staticUrl;
 var myLatitude, myLongitude;
 var hasBeenNotified = false;
 //var pkmnLatitude, pkmnLongitude;
@@ -12,7 +26,7 @@ var MessageQueue = require("./MessageQueue");
 var DummyDataCreator = require("./dummyData");
 
 var dummyData; // = DummyDataCreator.createDummyData(5, 45, -97);
-console.log(JSON.stringify(dummyData));
+//console.log(JSON.stringify(dummyData));
 
 var firstTimeUpdatingLocation = true;
 var serverError = false;
@@ -20,9 +34,21 @@ var serverError = false;
 // XMLHttpRequest helper
 var xhrRequest = function (url, type, callback) {
 	var xhr = new XMLHttpRequest();
+
+	// time out after 10 seconds
+	xhr.timeout = 10 * 1000;
+
 	xhr.onload = function () {
+		// request finished
 		callback(this.responseText);
 	};
+
+	xhr.ontimeout = function (e) {
+		// request timed out
+		MessageQueue.sendAppMessage({"DisplayMessage": "Data request timed out"});
+		serverError = true;
+	};
+
 	xhr.open(type, url);
 	xhr.send();
 };
@@ -44,13 +70,19 @@ function getPokemon() { //(latitude, longitude) {
 		console.log("myLatitude: " + myLatitude);
 		console.log("myLongitude: " + myLongitude);
 
-		// live PokeVision data, hard-coded to Ann Arbor for now
-		var scanUrl = 'https://pokevision.com/map/scan/' + myLatitude + '/' + myLongitude;
-		var dataUrl = 'https://pokevision.com/map/data/' + myLatitude + '/' + myLongitude;
+		// live PokeVision data
+		//var scanUrl = 'https://pokevision.com/map/scan/' + myLatitude + '/' + myLongitude;
+		//var dataUrl = 'https://pokevision.com/map/data/' + myLatitude + '/' + myLongitude;
 
 		// static (stable!) example of PokeVision data
 		//var scanUrl = 'https://mathewreiss.github.io/PoGO/data.json';
 		//var dataUrl = 'https://mathewreiss.github.io/PoGO/data.json';
+
+		// static example of new back end
+		//var scanUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
+		//var dataUrl = 'https://pokewatch.github.io/PoGO/unknown6.json';
+
+		/*
 
 		// TODO: is this OK?
 		xhrRequest(scanUrl, 'GET', function(scanResponseText) {
@@ -85,132 +117,177 @@ function getPokemon() { //(latitude, longitude) {
 				}
 
 			}
+		*/
 
+		// TODO: fix indentation here during clean-up!
 
 			xhrRequest(dataUrl, 'GET', function(dataResponseText) {
-				var json = JSON.parse(dataResponseText);
+				console.log(dataResponseText); // JSON.stringify() not necessary!
+
+				var json;
+				try {
+					json = JSON.parse(dataResponseText);
+				} catch(e) {
+					// TODO: improve!
+					json = JSON.parse('{"pokemons":[]}');
+					MessageQueue.sendAppMessage({"DisplayMessage": "Invalid data returned by server"});
+					serverError = true;
+				}
 
 				// TODO: this is silly - really should just not do xhrRequest at all, but
 				// as a quick hack to enable "demo mode" for now...
-				if (serverError) {
+				if (useDataUrl == 0) {
 					// populate if not set (once)
 					if (dummyData == null) {
 						dummyData = DummyDataCreator.createDummyData(5, myLatitude, myLongitude);
 					}
 					json = dummyData;
+					MessageQueue.sendAppMessage({"DisplayMessage": "No server available - reverting to DEMO mode using DUMMY data..."});
 				}
 
 
 				console.log(dataResponseText); // JSON.stringify() not necessary!
 
 				// TODO: status check!
-				console.log('status is "' + json.status + '"');
+				//console.log('status is "' + json.status + '"');
 
 				// TODO: much better error checking???
-				if (json.pokemon.length > 0) {
 
-					var allNearbyPokemon = [];
+				// TODO: better schema validation
+				if (json.hasOwnProperty("pokemons")) {
 
-					var i;
-					for (i = 0; i < json.pokemon.length; i++) {
+					if (json.pokemons.length > 0) {
 
-						// TODO: should still actually verify vs. using blindly!
-						console.log('pokemon[' + i + '].pokemonId is "' + json.pokemon[i].pokemonId + '"');
-						// PokeVision is string for some reason
-						var pokemonId = Number(json.pokemon[i].pokemonId);
-						console.log('pokemonId is "' + pokemonId + '"');
+						if (json.pokemons[0].hasOwnProperty("disappear_time")) {
 
-						var pokemonExpirationTime = json.pokemon[i].expiration_time;
-						console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
+							var allNearbyPokemon = [];
 
-						var pokemonLatitude = json.pokemon[i].latitude;
-						console.log('pokemonLatitude is "' + pokemonLatitude + '"');
-						var pokemonLongitude = json.pokemon[i].longitude;
-						console.log('pokemonLongitude is "' + pokemonLongitude + '"');
+							var i;
+							for (i = 0; i < json.pokemons.length; i++) {
 
-						var pokemonDistance = getDistance(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
-						var pokemonBearing = getBearing(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
+								// TODO: should still actually verify vs. using blindly!
+								console.log('pokemon[' + i + '].pokemon_id is "' + json.pokemons[i].pokemon_id + '"');
+								// PokeVision is string for some reason
+								var pokemonId = json.pokemons[i].pokemon_id; //Number(json.pokemons[i].pokemonId);
+								console.log('pokemonId is "' + pokemonId + '"');
 
-						var pokemonUID = json.pokemon[i].uid;
 
-						// fails on iOS!
-						// per @katharine:
-						// > PebbleKit JS Android is not to spec.
-						//allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
+								var pokemonExpirationTime = json.pokemons[i].disappear_time;
 
-						var pokemonData = {
-							"i": i,
-							"pokemonId": pokemonId,
-							"pokemonExpirationTime": pokemonExpirationTime,
-							"pokemonLatitude": pokemonLatitude,
-							"pokemonLongitude": pokemonLongitude,
-							"pokemonDistance": pokemonDistance,
-							"pokemonBearing": pokemonBearing,
-							"pokemonUID": pokemonUID
-						};
-						allNearbyPokemon.push(pokemonData);
+								// offset static times based on app launch time - ONLY when 
+								// static URL specified (and enabled!)
+								// TODO: care about capitalization etc.?
+								if ((useDataUrl == 1) && (dataUrl == staticUrl)) {
+									pokemonExpirationTime = pokemonExpirationTime - 1470884585708  + 
+										(7 * 60 * 1000) + startTime;
+								}
 
-					}
+								// new data uses JS time vs. epoch, so divide by 1000 (for now/to prevent the need for changes to .c)
+								pokemonExpirationTime /= 1000;
 
-					console.log("allNearbyPokemon: " + JSON.stringify(allNearbyPokemon));
+								console.log('pokemonExpirationTime is "' + pokemonExpirationTime + '"');
 
-					// sort by distance
-					allNearbyPokemon.sort(function(a, b) {
-						return a.pokemonDistance - b.pokemonDistance;
-					});
 
-					//get rid of duplicates that have the same UID
-					for(var i=0; i<allNearbyPokemon.length-1; i++ ) {
-					  if (allNearbyPokemon[i+1] != undefined && allNearbyPokemon[i].pokemonId == allNearbyPokemon[i+1].pokemonId && allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[i+1].pokemonLatitude  && allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[i+1].pokemonLongitude) {
-					    console.log("removed pokemon at index " + i)
-					    delete allNearbyPokemon[i];
-					    //allNearbyPokemon.splice(i, 1);
-					  }
-					}
+								var pokemonLatitude = json.pokemons[i].latitude;
+								console.log('pokemonLatitude is "' + pokemonLatitude + '"');
+								var pokemonLongitude = json.pokemons[i].longitude;
+								console.log('pokemonLongitude is "' + pokemonLongitude + '"');
 
-					allNearbyPokemon = allNearbyPokemon.filter( function( el ){ return (typeof el !== "undefined"); } );
+								var pokemonDistance = getDistance(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
+								var pokemonBearing = getBearing(myLatitude, myLongitude, pokemonLatitude, pokemonLongitude);
 
-					// Assemble dictionary using our keys
-					var dictionary = {};
+								var pokemonUID = json.pokemons[i].uid;
 
-					// take closest 9 (or fewer if not available; sentinel indicated by pokemonId == 0)
-					var j;
-					for (j = 0; j < 9; j++) {
+								// fails on iOS!
+								// per @katharine:
+								// > PebbleKit JS Android is not to spec.
+								//allNearbyPokemon.push({i, pokemonId, pokemonExpirationTime, pokemonDistance});
 
-						if (j < allNearbyPokemon.length) {
-							dictionary["Pokemon" + (j + 1) + "Id"] = allNearbyPokemon[j].pokemonId;
-							dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = allNearbyPokemon[j].pokemonExpirationTime;
-							dictionary["Pokemon" + (j + 1) + "Distance"] = allNearbyPokemon[j].pokemonDistance;
-							dictionary["Pokemon" + (j + 1) + "Bearing"] = allNearbyPokemon[j].pokemonBearing;
+								var pokemonData = {
+									"i": i,
+									"pokemonId": pokemonId,
+									"pokemonExpirationTime": pokemonExpirationTime,
+									"pokemonLatitude": pokemonLatitude,
+									"pokemonLongitude": pokemonLongitude,
+									"pokemonDistance": pokemonDistance,
+									"pokemonBearing": pokemonBearing,
+									"pokemonUID": pokemonUID
+								};
+								allNearbyPokemon.push(pokemonData);
+
+							}
+
+							console.log("allNearbyPokemon: " + JSON.stringify(allNearbyPokemon));
+
+							// sort by distance
+							allNearbyPokemon.sort(function(a, b) {
+								return a.pokemonDistance - b.pokemonDistance;
+							});
+
+							//get rid of duplicates that have the same UID
+							for(var i=0; i<allNearbyPokemon.length-1; i++ ) {
+							  if (allNearbyPokemon[i+1] != undefined && allNearbyPokemon[i].pokemonId == allNearbyPokemon[i+1].pokemonId && allNearbyPokemon[i].pokemonLatitude == allNearbyPokemon[i+1].pokemonLatitude  && allNearbyPokemon[i].pokemonLongitude == allNearbyPokemon[i+1].pokemonLongitude) {
+							    console.log("removed pokemon at index " + i)
+							    delete allNearbyPokemon[i];
+							    //allNearbyPokemon.splice(i, 1);
+							  }
+							}
+
+							allNearbyPokemon = allNearbyPokemon.filter( function( el ){ return (typeof el !== "undefined"); } );
+
+							// Assemble dictionary using our keys
+							var dictionary = {};
+
+							// take closest 9 (or fewer if not available; sentinel indicated by pokemonId == 0)
+							var j;
+							for (j = 0; j < 9; j++) {
+
+								if (j < allNearbyPokemon.length) {
+									dictionary["Pokemon" + (j + 1) + "Id"] = allNearbyPokemon[j].pokemonId;
+									dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = allNearbyPokemon[j].pokemonExpirationTime;
+									dictionary["Pokemon" + (j + 1) + "Distance"] = allNearbyPokemon[j].pokemonDistance;
+									dictionary["Pokemon" + (j + 1) + "Bearing"] = allNearbyPokemon[j].pokemonBearing;
+								} else {
+									dictionary["Pokemon" + (j + 1) + "Id"] = 0;
+									dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = 0;
+									dictionary["Pokemon" + (j + 1) + "Distance"] = 0;
+									dictionary["Pokemon" + (j + 1) + "Bearing"] = 0;
+									break;
+								}
+							}
+							console.log("dictionary: " + JSON.stringify(dictionary));
+
+							// Send to Pebble
+							MessageQueue.sendAppMessage(dictionary,
+								function(e) {
+									console.log("AppMessage sent to Pebble successfully!");
+								},
+								function(e) {
+									console.log("Error sending AppMessage to Pebble!");
+								}
+							);
+
 						} else {
-							dictionary["Pokemon" + (j + 1) + "Id"] = 0;
-							dictionary["Pokemon" + (j + 1) + "ExpirationTime"] = 0;
-							dictionary["Pokemon" + (j + 1) + "Distance"] = 0;
-							dictionary["Pokemon" + (j + 1) + "Bearing"] = 0;
-							break;
+							MessageQueue.sendAppMessage({"DisplayMessage": "Pokemon data format incorrect"});
+							serverError = true;					
+						}
+
+					} else {
+						// no pokemon found!
+
+						if (!serverError) {
+							// only send if there's not already a server error toast on the way too
+							MessageQueue.sendAppMessage({"DisplayMessage": "No Pokemon are nearby"});
 						}
 					}
-					console.log("dictionary: " + JSON.stringify(dictionary));
 
-					// Send to Pebble
-					MessageQueue.sendAppMessage(dictionary,
-						function(e) {
-							console.log("AppMessage sent to Pebble successfully!");
-						},
-						function(e) {
-							console.log("Error sending AppMessage to Pebble!");
-						}
-					);
 				} else {
-					// no pokemon found!
-
-					if (!serverError) {
-						// only send if there's not already a server error toast on the way too
-						MessageQueue.sendAppMessage({"DisplayMessage": "No Pokemon are nearby"});
-					}
+					MessageQueue.sendAppMessage({"DisplayMessage": "Data format incorrect"});
+					serverError = true;					
 				}
+
 			});
-		});
+		//});
 	}
 }
 
@@ -329,6 +406,19 @@ Pebble.addEventListener("ready", function(e){
         localStorage.notified = "yes";
     }
 
+	// load config from localStorage (or default to dummy) if not found
+	// TODO: check values etc.
+	if (localStorage.useDataUrl) {
+		useDataUrl = localStorage.useDataUrl;
+	} else {
+		useDataUrl = 0;
+	}
+	if (localStorage.dataUrl) {
+		dataUrl = localStorage.dataUrl;
+	} else {
+		dataUrl = staticUrl;
+	}
+
 	getLocation();
 	getPokemon();
 });
@@ -342,6 +432,38 @@ Pebble.addEventListener("appmessage", function(e){
 
 	getPokemon();
 });
+
+
+// override default Clay autoHandleEvents with handling right here in JS
+Pebble.addEventListener("showConfiguration", function(e) {
+
+	console.log('showConfiguration');
+
+	// actually...don't need to override this one, just the other, but...
+	Pebble.openURL(clay.generateUrl());
+});
+
+Pebble.addEventListener("webviewclosed", function(e) {
+
+	console.log('webviewclosed');
+
+	if (e && !e.response) {
+		return;
+	}
+
+
+	var claySettings = clay.getSettings(e.response);
+	console.log("messageKeys.UseDataUrl: " + claySettings[messageKeys.UseDataUrl]);
+	console.log("messageKeys.DataUrl: " + claySettings[messageKeys.DataUrl]);
+	// note returned values are 0/1 vs. true/false
+	useDataUrl = Number(claySettings[messageKeys.UseDataUrl]);
+	dataUrl = claySettings[messageKeys.DataUrl];
+
+	// TODO: check returned values before storing?
+	localStorage.useDataUrl = useDataUrl;
+	localStorage.dataUrl = dataUrl;
+});
+
 
 function getLocation(){
 	if(navigator && navigator.geolocation){
@@ -394,3 +516,4 @@ function getLocation(){
 			}
 		}
 	}
+
