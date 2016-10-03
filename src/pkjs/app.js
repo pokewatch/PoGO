@@ -1,4 +1,5 @@
 //"use strict";
+var MessageQueue = require("message-queue-pebble");
 
 // clay initialization
 var Clay = require('pebble-clay');
@@ -22,7 +23,6 @@ var hasBeenNotified = false;
 //var distance, bearing;
 var gpsErrorReported = false;
 
-var MessageQueue = require("./MessageQueue");
 var DummyDataCreator = require("./dummyData");
 
 var dummyData; // = DummyDataCreator.createDummyData(5, 45, -97);
