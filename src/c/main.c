@@ -2,17 +2,13 @@
 #include "pokedex.h"
 
 // TODO: replace crude hack with https://github.com/smallstoneapps/data-processor ;)
-#define KEY_POKEMON1ID 0
-#define KEY_POKEMON1EXPIRATIONTIME 1
-#define KEY_POKEMON1DISTANCE 2
-#define KEY_POKEMON1BEARING 3
-// . . .
-//#define KEY_POKEMON9ID 32
-//#define KEY_POKEMON9EXPIRATIONTIME 33
-//#define KEY_POKEMON9DISTANCE 34
-//#define KEY_POKEMON9BEARING 35
-#define KEY_REQUESTTYPE 36
-#define KEY_DISPLAYMESSAGE 37
+// #define KEY_POKEMON1ID 0
+// #define KEY_POKEMON1EXPIRATIONTIME 1
+// #define KEY_POKEMON1DISTANCE 2
+// #define KEY_POKEMON1BEARING 3
+
+// #define KEY_REQUESTTYPE 36
+// #define KEY_DISPLAYMESSAGE 37
 
 Window *splash, *list, *compass;
 MenuLayer *menu;
@@ -226,7 +222,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
 
   Tuple *tuple;
-  tuple = dict_find(iterator, KEY_DISPLAYMESSAGE);
+  tuple = dict_find(iterator, MESSAGE_KEY_Message);
   if(tuple) {
   	if(tuple->value->cstring != 0) {
 			APP_LOG(APP_LOG_LEVEL_ERROR, "String is %s" , tuple->value->cstring);
@@ -238,7 +234,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 	for(int i = 0; i < 9; i++){
 
 	  // Read tuples
-	  Tuple *pokemon_id_tuple = dict_find(iterator, KEY_POKEMON1ID + (i * 4));
+	  Tuple *pokemon_id_tuple = dict_find(iterator, MESSAGE_KEY_Id + (i * 4));
 	  if(pokemon_id_tuple) {
 	  	nearby[i].dex = pokemon_id_tuple->value->int32;
 	  }

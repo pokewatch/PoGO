@@ -1,4 +1,8 @@
 //"use strict";
+
+// ----------------------------------------------------------------------------------------------------------------------------
+//  Requires and Globals
+// ------------------------------------------------------------
 var MessageQueue = require("message-queue-pebble");
 
 // clay initialization
@@ -31,6 +35,10 @@ var dummyData; // = DummyDataCreator.createDummyData(5, 45, -97);
 var firstTimeUpdatingLocation = true;
 var serverError = false;
 
+
+// ----------------------------------------------------------------------------------------------------------------------------
+//  External Resource Acquisition
+// ------------------------------------------------------------
 // XMLHttpRequest helper
 var xhrRequest = function (url, type, callback) {
 	var xhr = new XMLHttpRequest();
@@ -45,7 +53,7 @@ var xhrRequest = function (url, type, callback) {
 
 	xhr.ontimeout = function (e) {
 		// request timed out
-		MessageQueue.sendAppMessage({"DisplayMessage": "Data request timed out"});
+		MessageQueue.sendAppMessage({"Message": "Data request timed out"});
 		serverError = true;
 	};
 
@@ -53,10 +61,12 @@ var xhrRequest = function (url, type, callback) {
 	xhr.send();
 };
 
+
+
 function getPokemon() { //(latitude, longitude) {
 
 	//uncomment this to test toasts hehe "test toast"
-	//MessageQueue.sendAppMessage({"DisplayMessage": "Test Toast"});
+	//MessageQueue.sendAppMessage({"Message": "Test Toast"});
 
 	// quick lame hack: myLatitude, myLongitude may not yet be set - just skip for now...
 	if (isNaN(myLatitude) || isNaN(myLongitude)) {
@@ -90,7 +100,7 @@ function getPokemon() { //(latitude, longitude) {
 				console.log("Down for maintenance");
 
 				// TODO: something better vs. continual pop-ups!
-				MessageQueue.sendAppMessage({"DisplayMessage": "Servers are down for maintenance"});
+				MessageQueue.sendAppMessage({"Message": "Servers are down for maintenance"});
 				serverError = true;
 
 			} else {
@@ -106,10 +116,10 @@ function getPokemon() { //(latitude, longitude) {
 
 					// advise of "demo mode" too if we're in it:
 					if (dummyData != null) {
-						MessageQueue.sendAppMessage({"DisplayMessage": "Server error" + 
+						MessageQueue.sendAppMessage({"Message": "Server error" + 
 							"\n\nPlease enjoy this DEMO using DUMMY DATA! :)"});
 					} else {
-						MessageQueue.sendAppMessage({"DisplayMessage": "Server error"});
+						MessageQueue.sendAppMessage({"Message": "Server error"});
 					}
 					serverError = true;
 				} else {
@@ -130,7 +140,7 @@ function getPokemon() { //(latitude, longitude) {
 				} catch(e) {
 					// TODO: improve!
 					json = JSON.parse('{"pokemons":[]}');
-					MessageQueue.sendAppMessage({"DisplayMessage": "Invalid data returned by server"});
+					MessageQueue.sendAppMessage({"Message": "Invalid data returned by server"});
 					serverError = true;
 				}
 
@@ -142,7 +152,7 @@ function getPokemon() { //(latitude, longitude) {
 						dummyData = DummyDataCreator.createDummyData(5, myLatitude, myLongitude);
 					}
 					json = dummyData;
-					MessageQueue.sendAppMessage({"DisplayMessage": "No server available - reverting to DEMO mode using DUMMY data..."});
+					MessageQueue.sendAppMessage({"Message": "No server available - reverting to DEMO mode using DUMMY data..."});
 				}
 
 
@@ -268,7 +278,7 @@ function getPokemon() { //(latitude, longitude) {
 							);
 
 						} else {
-							MessageQueue.sendAppMessage({"DisplayMessage": "Pokemon data format incorrect"});
+							MessageQueue.sendAppMessage({"Message": "Pokemon data format incorrect"});
 							serverError = true;					
 						}
 
@@ -277,12 +287,12 @@ function getPokemon() { //(latitude, longitude) {
 
 						if (!serverError) {
 							// only send if there's not already a server error toast on the way too
-							MessageQueue.sendAppMessage({"DisplayMessage": "No Pokemon are nearby"});
+							MessageQueue.sendAppMessage({"Message": "No Pokemon are nearby"});
 						}
 					}
 
 				} else {
-					MessageQueue.sendAppMessage({"DisplayMessage": "Data format incorrect"});
+					MessageQueue.sendAppMessage({"Message": "Data format incorrect"});
 					serverError = true;					
 				}
 
@@ -293,7 +303,9 @@ function getPokemon() { //(latitude, longitude) {
 
 
 
-
+// ----------------------------------------------------------------------------------------------------------------------------
+//  GPS Positioning Calculations
+// ------------------------------------------------------------
 // based on @mathew's process_distance()
 function getDistance(myLatitude, myLongitude, pkmnLatitude, pkmnLongitude) {
 	var distance;
@@ -394,6 +406,9 @@ function convert_units(old_distance) {
 
 
 
+// ----------------------------------------------------------------------------------------------------------------------------
+//  Phone Watch Communication
+// ------------------------------------------------------------
 // Listen for when the watchface is opened
 Pebble.addEventListener("ready", function(e){
 
@@ -433,7 +448,9 @@ Pebble.addEventListener("appmessage", function(e){
 	getPokemon();
 });
 
-
+// ----------------------------------------------------------------------------------------------------------------------------
+//  Clay Configuration Settings
+// ------------------------------------------------------------
 // override default Clay autoHandleEvents with handling right here in JS
 Pebble.addEventListener("showConfiguration", function(e) {
 
@@ -465,6 +482,9 @@ Pebble.addEventListener("webviewclosed", function(e) {
 });
 
 
+// ----------------------------------------------------------------------------------------------------------------------------
+//  GPS Functionality
+// ------------------------------------------------------------
 function getLocation(){
 	if(navigator && navigator.geolocation){
 		navigator.geolocation.watchPosition(
@@ -491,7 +511,7 @@ function getLocation(){
 					function(pos){ //Fail - Low Acc
 						// only alert once!
 						if(!gpsErrorReported) {
-							MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
+							MessageQueue.sendAppMessage({"Message": "Unable to detect location: make sure GPS is on"});
 							gpsErrorReported = true;
 						}
 					},
@@ -511,7 +531,7 @@ function getLocation(){
 		else{
 			// only alert once!
 			if(!gpsErrorReported) {
-				MessageQueue.sendAppMessage({"DisplayMessage": "Unable to detect location: make sure GPS is on"});
+				MessageQueue.sendAppMessage({"Message": "Unable to detect location: make sure GPS is on"});
 				gpsErrorReported = true;
 			}
 		}
